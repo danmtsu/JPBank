@@ -1,22 +1,16 @@
 from conta import Conta
 import random
 from datetime import datetime
+from user import User
 
 class Bank():
     def __init__(self,):
-        self.__contas = {}
-        self.__agencias = []
+        self.contas = []
+        self.users = {}
         self.today = datetime.today().date()
 
 
     
-    @property
-    def agencias(self):
-        return self.__agencias
-    
-    @property
-    def contas(self,):
-        return self.__contas
     
     def is_same_day(self):
         if datetime.today().date() == self.today:
@@ -27,26 +21,31 @@ class Bank():
     
     def gerar_numero_agencia(self,):
         # Defina o intervalo para os números de agências que você deseja simular
-        numero_minimo = 1000
-        numero_maximo = 9999
+        numero_minimo = 100000
+        numero_maximo = 999999
 
         # Gere um número aleatório de agência dentro do intervalo definido
-        numero_agencia = random.randint(numero_minimo, numero_maximo)
-        if numero_agencia not in self.__agencias:
-            self.__agencias.append(numero_agencia)
-        return numero_agencia
+        numero_contas= random.randint(numero_minimo, numero_maximo)
+        if numero_contas not in self.contas:
+            self.contas.append(numero_contas)
+        return numero_contas
 
-    def criaConta(self, numero:int,agencia:int):
-        if f"{numero}" not in self.__contas:
-            if agencia in self.__agencias:
-                self.__contas[f"{numero}"]= Conta(numero,agencia)
-                print(self.__contas[f"{numero}"])
+    def criaConta(self, user:dict):
+        if user["cpf"] != None and user["cpf"] not in self.contas:
+            if user["name"] and user["born"] and user["address"] != None:
+                usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
+                conta = Conta(self.gerar_numero_agencia(), 1000)
+                usuario.add_conta(conta.numeroConta)
+                self.users[f"{user['cpf']}"] = usuario
+                print(f"{self.users}")
+                print("conta criada com sucesso")
+
         else:
-            print("numero de conta já existente")
+            print("cpf já existente")
 
     def realiza_deposito(self,numeroConta:int,valor:float):
         if numeroConta > 0:
-            contaEnvio = self.__contas[f'{numeroConta}']
+            contaEnvio = self.contas[f'{numeroConta}']
             contaEnvio.recebe_deposito(valor)
             contaEnvio.adiciona_transacao(f'{self.today}deposito de {valor}; Saldo: {contaEnvio.saldo}')
             return f"deposito de {valor} para a conta:{numeroConta}; Saldo atual de: {contaEnvio.saldo}"
@@ -55,12 +54,12 @@ class Bank():
         
 
     def verifica_extrato(self,numeroConta:int):
-        contaExtrato = self.__contas[f"{numeroConta}"]
+        contaExtrato = self.contas[f"{numeroConta}"]
         return contaExtrato.transacoes
     
     def realiza_saque(self,numeroConta:int,valor:float):
-            if f"{numeroConta}" in self.__contas:
-                contaSacada = self.__contas[f"{numeroConta}"]
+            if f"{numeroConta}" in self.contas:
+                contaSacada = self.contas[f"{numeroConta}"]
                 if valor <= 500 and valor <= contaSacada.saldo and contaSacada.saqueHoje <3:
                     if self.is_same_day_day():
                         contaSacada.saqueHoje +=1

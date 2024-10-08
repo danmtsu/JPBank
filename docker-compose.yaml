@@ -1,0 +1,15 @@
+version: '4'
+services:
+  mysql:
+    image: mysql:latest
+    container_name: banks
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: banks
+      MYSQL_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./db/account_creator.sql:/docker-entrypoint-initdb.d/account_creator.sql"
+      
