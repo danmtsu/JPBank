@@ -51,12 +51,12 @@ class User:
         self.__email = email
 
     
-    def add_conta(self,numero:int):
+    def add_conta(self,numero):
         self.accounts.append(numero)
         print(self.accounts)
 
 
-    def rm_conta(self,numero:int):
+    def rm_conta(self,numero):
         self.accounts.remove(numero)
 
 

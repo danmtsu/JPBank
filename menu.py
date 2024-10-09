@@ -46,8 +46,22 @@ class Menu:
             self.__decision = int(input("Digite a opção desejada"))
             return self.__decision
         
+    def menu_deposito(self,):
+        print("==> escolha uma conta e o valor que deseja depositar <==")
+        numerConta = int(input("Digite o numero da conta de destino: "))
+        valor = float(input("Digite o valor do seu depósito: "))
+        return (numerConta, valor)
     
+    def menu_saque(self,):
+        print("==> ESCOLHA O VALOR QUE DESEJA SACAR <==")
+        valor = float(input("Digite o valor que deseja sacar:"))
+        return valor
+    
+    def menu_extrato(self, transactions:dict):
+        print("===> EXTRATO DA CONTA <===")
+        print(f"{transactions}")
+
     def menu_login(self,):
         cpf = int(input("Por favor digite seu CPF: "))
         password = input("Por favor digite sua senha: ")
-        return (cpf,password)
+        return (cpf, password)
