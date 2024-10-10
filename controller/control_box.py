@@ -1,10 +1,10 @@
-from menu import Menu
+from view.interface import Interface
 from bank import Bank
 
 class ControlBox:
-    def __init__(self):
+    def __init__(self,root):
         self.__bank = Bank()
-        self.__menu = Menu()
+        self.__menu = Interface(root)
         self.__user = None
         self.__conta = None
         self.__logado = False
@@ -35,7 +35,7 @@ class ControlBox:
         self.__user = user
 
     def tela_inicial(self):
-        decisao = self.__menu.menu_inical()
+        decisao = self.__menu.create_initial_screen()
         if decisao == 1:
             # Criação de conta
             user = self.__menu.menu_signup()

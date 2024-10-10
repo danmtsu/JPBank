@@ -10,7 +10,13 @@ class Bank():
         self.today = datetime.today().date()
 
 
-    def criaConta(self, user:dict):
+    def criaConta(self, user:dict = {}, cpf: str = "",name:str = "", email:str = ""):
+        user["cpf"] = cpf
+        user["name"] = name
+        user["email"] = email
+        user["born"] = "01/04/1999"
+        user["address"] = "rua dos tolos 420"
+        user["name"] = "claudinete"
         n = 0
         if user["cpf"] != None and user["cpf"] not in self.contas:
             if user["name"] and user["born"] and user["address"] != None:
@@ -40,7 +46,11 @@ class Bank():
         else:
             return f"Digite uma conta existente"
 
-        
+    def verify_user(self, cpf, password):
+        for user in self.users:
+            if user['cpf'] == cpf and user['password'] == password:
+                return True
+        return False
 
     def verifica_extrato(self,transacoes:list):
         for i in transacoes:

@@ -1,9 +1,12 @@
 from bank import Bank
 from controller.control_box import ControlBox
+import tkinter as tk
 
 def main():
+    root = tk.Tk()
     rodando = True
-    controller = ControlBox()
+    controller = ControlBox(root)
+    root.mainloop()
     # Inicializa a conexão ao banco de dados
     #mysqlDB = Accounts_db(host="localhost", user="root", password="root", database="banks")
     #mysqlDB.connect()
