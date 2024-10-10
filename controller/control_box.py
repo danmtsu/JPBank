@@ -29,6 +29,7 @@ class ControlBox:
     def logado(self, logado: bool):
         self.__logado = logado
 
+
     @user.setter
     def user(self, user):
         self.__user = user
@@ -58,6 +59,8 @@ class ControlBox:
         if self.__logado:
             self.tela_usuario()
 
+
+
     def tela_usuario(self):
         while self.__logado:
             decisao = self.__menu.menu_usuario()
@@ -66,19 +69,17 @@ class ControlBox:
                 # Depósito
                 conta_valor = self.__menu.menu_deposito()
                 self.__bank.realiza_deposito(conta_valor[0], conta_valor[1])
-                print(f"Depósito de {conta_valor[1]} realizado para a conta {conta_valor[0]}")
 
             elif decisao == 2:
                 # Saque
                 valor = self.__menu.menu_saque()
-                resultado = self.__bank.realiza_saque(self.__conta, valor)
-                print(resultado)
+                self.__bank.realiza_saque(self.__conta, valor)
 
             elif decisao == 3:
                 # Verifica extrato
                 #extrato = self.__bank.verifica_extrato(self.__conta.numeroConta)
                 self.__menu.menu_extrato(self.__conta.transacoes)
-                print(f"seu saldo atual é de:{self.__conta.saldo}")
+                print(f"Seu saldo atual é de:{self.__conta.saldo}")
 
             elif decisao == 0:
                 # Logout

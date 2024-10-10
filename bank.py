@@ -30,12 +30,16 @@ class Bank():
             print("cpf já existente")
 
     def realiza_deposito(self,numeroConta:str,valor:float):
+        if int(valor) <= 0:
+             print("Valor de depósito inválido")
+             return
         if numeroConta in self.contas:
             conta = self.contas[numeroConta]
             conta.recebe_deposito(valor)     
             return f"deposito de {valor} para a conta:{numeroConta};"
         else:
-            return "Valor de depósito inválido"
+            return f"Digite uma conta existente"
+
         
 
     def verifica_extrato(self,transacoes:list):
@@ -43,12 +47,17 @@ class Bank():
             print(i)
     
     def realiza_saque(self,conta:Conta,valor:float):
-            if conta.numeroConta in self.contas:
-                if valor <= 500 and valor <= conta.saldo and conta.saqueHoje <3:
+        if valor <= 0:
+            print( "valor de saque inválido")
+            return
+        if conta.numeroConta in self.contas:
+            if conta.saqueHoje <3:
+                if  valor <= 500 and valor <= conta.saldo:
                     conta.realiza_saque(valor)
                     print(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
                     return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
-                else:
-                    print("valor de saque inválido")
             else:
-                print(f"{conta.numeroConta} inexistente.")
+                print("limite de saque excedido")
+        else:
+            print(f"{conta.numeroConta} inexistente.")
+    
