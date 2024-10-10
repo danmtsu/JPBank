@@ -46,7 +46,7 @@ class Bank():
             if conta.numeroConta in self.contas:
                 if valor <= 500 and valor <= conta.saldo and conta.saqueHoje <3:
                     conta.realiza_saque(valor)
-                    conta.adiciona_transacao(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
+                    print(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
                     return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
                 else:
                     print("valor de saque inválido")

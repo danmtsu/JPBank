@@ -40,7 +40,7 @@ class Conta():
 
     def realiza_saque(self,valor:float):
         self.__saldo -= valor
-        self.saqueHoje +=1
+        self.__saqueHoje +=1
         print(f"Saque realizado, seu saldo atual é de:{self.__saldo}")
         self.transacoes.append(f"Saque {self.today[0]} {self.today[1]} Valor de: {valor}")
 
