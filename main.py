@@ -1,9 +1,9 @@
 from bank import Bank
-from controller.control_box import control_box
+from controller.control_box import ControlBox
 
 def main():
     rodando = True
-    controller = control_box()
+    controller = ControlBox()
     # Inicializa a conexão ao banco de dados
     #mysqlDB = Accounts_db(host="localhost", user="root", password="root", database="banks")
     #mysqlDB.connect()

@@ -1,4 +1,5 @@
 from datetime import datetime
+from conta import Conta
 
 class User:
     def __init__(self, cpf, password:str, name:str, address:str, email:str, born:str):
@@ -7,7 +8,7 @@ class User:
         self.__address = address
         self.__email = email
         self.__born = born
-        self.accounts = []
+        self.contas = []
         self.__password = password
 
     @property
@@ -51,13 +52,13 @@ class User:
         self.__email = email
 
     
-    def add_conta(self,numero):
-        self.accounts.append(numero)
-        print(self.accounts)
+    def add_conta(self,conta:Conta):
+        self.contas.append(conta)
+        print(f"Conta de numero: {conta.numeroConta} e agencia: {conta.agencia} criada")
 
 
-    def rm_conta(self,numero):
-        self.accounts.remove(numero)
+    def rm_conta(self,conta:Conta):
+        self.contas.remove(conta)
 
 
 

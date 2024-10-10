@@ -48,7 +48,7 @@ class Menu:
         
     def menu_deposito(self,):
         print("==> escolha uma conta e o valor que deseja depositar <==")
-        numerConta = int(input("Digite o numero da conta de destino: "))
+        numerConta = input("Digite o numero da conta de destino: ")
         valor = float(input("Digite o valor do seu depósito: "))
         return (numerConta, valor)
     
@@ -57,7 +57,7 @@ class Menu:
         valor = float(input("Digite o valor que deseja sacar:"))
         return valor
     
-    def menu_extrato(self, transactions:dict):
+    def menu_extrato(self, transactions:list):
         print("===> EXTRATO DA CONTA <===")
         print(f"{transactions}")
 

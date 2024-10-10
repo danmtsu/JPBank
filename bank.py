@@ -16,11 +16,12 @@ class Bank():
             if user["name"] and user["born"] and user["address"] != None:
                 usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
                 while n < 1:
-                    numero_conta = random.randint(100000, 999999)
+                    numero_conta = str(random.randint(100000, 999999))
                     if numero_conta not in self.contas:
-                        self.contas[f"{numero_conta}"] = Conta(numero_conta,1000)
+                        new_account = Conta(numero_conta,1000)
+                        self.contas[numero_conta] = new_account
                         n = 1
-                usuario.add_conta(f"{numero_conta}")
+                usuario.add_conta(new_account)
                 self.users[f"{user['cpf']}"] = usuario
                 print(f"{self.users}")
                 print("conta criada com sucesso")
@@ -30,24 +31,24 @@ class Bank():
 
     def realiza_deposito(self,numeroConta:str,valor:float):
         if numeroConta in self.contas:
-            self.contas[numeroConta].recebe_deposito(valor)     
+            conta = self.contas[numeroConta]
+            conta.recebe_deposito(valor)     
             return f"deposito de {valor} para a conta:{numeroConta};"
         else:
             return "Valor de depósito inválido"
         
 
-    def verifica_extrato(self,numeroConta):
-        contaExtrato = self.contas[f"{numeroConta}"]
-        return contaExtrato.transacoes
+    def verifica_extrato(self,transacoes:list):
+        for i in transacoes:
+            print(i)
     
-    def realiza_saque(self,numeroConta:str,valor:float):
-            if numeroConta in self.contas:
-                contaSacada = self.contas[numeroConta]
-                if valor <= 500 and valor <= contaSacada.saldo and contaSacada.saqueHoje <3:
-                    contaSacada.realiza_saque(valor)
-                    contaSacada.adiciona_transacao(f'{self.today} Saque realizado de {valor}; Saldo: {contaSacada.saldo}')
-                    return f'Saque realizado de {valor}; Saldo: {contaSacada.saldo}'                   
+    def realiza_saque(self,conta:Conta,valor:float):
+            if conta.numeroConta in self.contas:
+                if valor <= 500 and valor <= conta.saldo and conta.saqueHoje <3:
+                    conta.realiza_saque(valor)
+                    conta.adiciona_transacao(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
+                    return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
                 else:
                     print("valor de saque inválido")
             else:
-                print(f"{numeroConta} inexistente.")
+                print(f"{conta.numeroConta} inexistente.")

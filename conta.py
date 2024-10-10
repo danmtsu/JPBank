@@ -1,13 +1,13 @@
 from datetime import datetime
 
 class Conta():
-    def __init__(self,numero:int,agencia:int):
+    def __init__(self,numero:str,agencia:int):
         self.__numeroConta = numero
         self.__agencia = agencia
         self.__saldo = 0
         self.__transacoes = []
         self.__saqueHoje = 0
-        self.today = (datetime.today().date, datetime.today().time)
+        self.today = (datetime.today().date(), datetime.today().time())
         
     @property
     def transacoes(self,):
@@ -35,11 +35,13 @@ class Conta():
 
     def recebe_deposito(self,valor:float):
         self.__saldo +=valor
+        print(f"deposito recebido seu saldo atual é de : {self.__saldo}")
         self.transacoes.append(f"Depósito {self.today[0]} {self.today[1]} Valor de: {valor}")
 
     def realiza_saque(self,valor:float):
         self.__saldo -= valor
         self.saqueHoje +=1
+        print(f"Saque realizado, seu saldo atual é de:{self.__saldo}")
         self.transacoes.append(f"Saque {self.today[0]} {self.today[1]} Valor de: {valor}")
 
     def __str__(self) -> str:
