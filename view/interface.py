@@ -1,161 +1,107 @@
 import tkinter as tk
-from tkinter import messagebox
-from bank import Bank
+from tkinter import simpledialog, messagebox
 
 class Interface:
     def __init__(self, root):
         self.root = root
         self.root.title("JPBank - Sistema Bancário")
-        self.root.geometry("400x300")  # Define o tamanho da janela
+        self.root.geometry("400x300")
+        self.__decision = None
 
-        self.bank = Bank()  # Instância do banco
-        self.create_initial_screen()
-    
-    def add_placeholder(self, entry, placeholder):
-        """Adiciona um placeholder em um campo Entry."""
-        entry.insert(0, placeholder)
-        entry.bind("<FocusIn>", lambda event: self.clear_placeholder(entry, placeholder))
-        entry.bind("<FocusOut>", lambda event: self.restore_placeholder(entry, placeholder))
+    @property
+    def decision(self):
+        return self.__decision
 
-    def clear_placeholder(self, entry, placeholder):
-        """Remove o placeholder ao focar no campo, se o texto for igual ao placeholder."""
-        if entry.get() == placeholder:
-            entry.delete(0, tk.END)
-            entry.config(fg='black')
-
-    def restore_placeholder(self, entry, placeholder):
-        """Restaura o placeholder se o campo estiver vazio."""
-        if entry.get() == "":
-            entry.insert(0, placeholder)
-            entry.config(fg='grey')
-
-    def create_initial_screen(self):
-        # Limpa a tela atual (se houver widgets anteriores)
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        # Cria o menu inicial
-        tk.Label(self.root, text="===> SELECIONE A OPÇÃO DESEJADA <===", font=("Arial", 12)).pack(pady=20)
-        tk.Button(self.root, text="1 - Tornar-se Cliente", command=self.menu_signup).pack(pady=5)
-        tk.Button(self.root, text="2 - Acessar Conta", command=self.menu_login).pack(pady=5)
-        tk.Button(self.root, text="0 - Sair", command=self.root.quit).pack(pady=5)
-
-    def menu_signup(self):
-        # Limpar tela
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        # Formulário de inscrição
-        label = tk.Label(self.root, text="Cadastro de Cliente")
+    def menu_inicial(self):
+        """Exibe o menu inicial e retorna a decisão do usuário."""
+        self.clear_screen()
+        label = tk.Label(self.root, text="===> SELECIONE A OPÇÃO DESEJADA <===")
         label.pack(pady=10)
 
-        self.cpf = tk.Entry(self.root, fg='grey')
-        self.add_placeholder(self.cpf, "Digite seu CPF")
-        self.cpf.pack(pady=5)
+        def set_decision(decision):
+            self.__decision = decision
+            self.root.quit()  # Fecha o loop de eventos do Tkinter
 
-        self.email = tk.Entry(self.root, fg='grey')
-        self.add_placeholder(self.email, "Digite seu email")
-        self.email.pack(pady=5)
+        btn_signup = tk.Button(self.root, text="1 - Tornar-se Cliente", command=lambda: set_decision(1))
+        btn_signup.pack(pady=5)
 
-        self.password = tk.Entry(self.root, show="*", fg='grey')
-        self.add_placeholder(self.password, "Digite sua senha")
-        self.password.pack(pady=5)
-
-        self.password_confirm = tk.Entry(self.root, show="*", fg='grey')
-        self.add_placeholder(self.password_confirm, "Confirme sua senha")
-        self.password_confirm.pack(pady=5)
-
-        btn_submit = tk.Button(self.root, text="Cadastrar", command=self.submit_signup)
-        btn_submit.pack(pady=5)
-
-        btn_back = tk.Button(self.root, text="Voltar", command=self.create_initial_screen)
-        btn_back.pack(pady=5)
-
-    def submit_signup(self):
-        # Obtenção dos dados de entrada
-        cpf = self.cpf.get()
-        email = self.email.get()
-        password = self.password.get()
-        password_confirm = self.password_confirm.get()
-
-        # Remove placeholders antes da validação
-        if cpf == "Digite seu CPF":
-            cpf = ""
-        if email == "Digite seu email":
-            email = ""
-        if password == "Digite sua senha":
-            password = ""
-        if password_confirm == "Confirme sua senha":
-            password_confirm = ""
-
-        # Verifica se as senhas coincidem
-        if password != password_confirm:
-            tk.messagebox.showerror("Erro", "As senhas não coincidem")
-            return
-
-        # Valida se os campos estão preenchidos
-        if not cpf or not email or not password:
-            tk.messagebox.showerror("Erro", "Preencha todos os campos.")
-            return
-
-        # Aqui você pode integrar com a lógica de cadastro de usuários
-        tk.messagebox.showinfo("Sucesso", f"Usuário {email} cadastrado com sucesso!")
-
-        # Volta para a tela inicial após o cadastro
-        self.create_initial_screen()
-
-
-    def menu_login(self):
-        # Limpar tela
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        # Tela de login
-        label = tk.Label(self.root, text="Login do Cliente")
-        label.pack(pady=10)
-
-        self.cpf_login = tk.Entry(self.root)
-        self.cpf_login.insert(0, "Digite seu CPF")
-        self.cpf_login.pack(pady=5)
-
-        self.senha_login = tk.Entry(self.root, show="*")
-        self.senha_login.insert(0, "Digite sua senha")
-        self.senha_login.pack(pady=5)
-
-        btn_login = tk.Button(self.root, text="Login", command=self.submit_login)
+        btn_login = tk.Button(self.root, text="2 - Acessar Conta", command=lambda: set_decision(2))
         btn_login.pack(pady=5)
 
-        btn_back = tk.Button(self.root, text="Voltar", command=self.create_initial_screen)
-        btn_back.pack(pady=5)
+        btn_exit = tk.Button(self.root, text="0 - Sair", command=lambda: set_decision(0))
+        btn_exit.pack(pady=5)
 
-    def submit_login(self):
-        cpf = self.cpf_login.get()
-        password = self.senha_login.get()
+        self.root.mainloop()
+        return self.__decision
 
-        try:
-            if self.bank.verify_user(cpf, password):  # Método a ser implementado na classe Bank
-                messagebox.showinfo("Login", "Login bem-sucedido!")
-                self.menu_usuario()  # Chama a função que exibe o menu do usuário
+    def menu_signup(self):
+        """Formulário de cadastro de cliente."""
+        user = {}
+        user['cpf'] = simpledialog.askstring("Cadastro", "Digite seu CPF")
+        user['email'] = simpledialog.askstring("Cadastro", "Digite seu email")
+        password_correct = False
+        while not password_correct:
+            password1 = simpledialog.askstring("Cadastro", "Digite sua senha", show='*')
+            password2 = simpledialog.askstring("Cadastro", "Confirme sua senha", show='*')
+            if password1 == password2:
+                password_correct = True
             else:
-                messagebox.showerror("Erro", "CPF ou senha incorretos.")
-        except Exception as e:
-            messagebox.showerror("Erro", str(e))
-
+                messagebox.showerror("Erro", "As senhas não coincidem")
+        user['password'] = password1
+        user['name'] = simpledialog.askstring("Cadastro", "Digite seu nome")
+        user['born'] = simpledialog.askstring("Cadastro", "Data de nascimento (DD/MM/AAAA)")
+        user['address'] = simpledialog.askstring("Cadastro", "Digite seu endereço")
+        return user
+    
     def menu_usuario(self):
-        # Limpa a tela anterior
-        for widget in self.root.winfo_children():
-            widget.destroy()
+        """Menu para o usuário logado."""
+        self.clear_screen()  # Limpa a tela antes de mostrar o menu do usuário
+        
+        label = tk.Label(self.root, text="===> ESCOLHA A OPÇÃO DESEJADA <===")
+        label.pack()
 
-        # Adiciona opções para depósito, saque, extrato, etc.
-        tk.Button(self.root, text="Realizar Depósito", command=self.menu_deposito).pack(pady=5)
-        tk.Button(self.root, text="Realizar Saque", command=self.menu_saque).pack(pady=5)
-        tk.Button(self.root, text="Ver Extrato", command=self.menu_extrato).pack(pady=5)
+        def set_decision(decision_value):
+            self.__decision = decision_value
+            self.root.quit()  # Fecha o loop de eventos do Tkinter
+
+        btn_deposito = tk.Button(self.root, text="1 - Realizar depósito", command=lambda: set_decision(1))
+        btn_deposito.pack(pady=3)
+
+        btn_saque = tk.Button(self.root, text="2 - Realizar saque", command=lambda: set_decision(2))
+        btn_saque.pack(pady=3)
+
+        btn_extrato = tk.Button(self.root, text="3 - Verificar extrato", command=lambda: set_decision(3))
+        btn_extrato.pack(pady=3)
+
+        btn_exit = tk.Button(self.root, text="0 - Sair", command=lambda: set_decision(0))  # Botão de logout
+        btn_exit.pack(pady=3)
+
+        self.root.mainloop()  # Aguarda decisão do usuário
+        return self.__decision
 
     def menu_deposito(self):
-        messagebox.showinfo("Depósito", "Depósito realizado com sucesso!")
+        """Coleta número da conta e valor para depósito."""
+        numero_conta = simpledialog.askstring("Depósito", "Digite o número da conta")
+        valor = simpledialog.askfloat("Depósito", "Digite o valor do depósito")
+        return (numero_conta, valor)
 
     def menu_saque(self):
-        messagebox.showinfo("Saque", "Saque realizado com sucesso!")
+        """Coleta o valor para saque."""
+        valor = simpledialog.askfloat("Saque", "Digite o valor que deseja sacar")
+        return valor
 
-    def menu_extrato(self):
-        messagebox.showinfo("Extrato", "Aqui está seu extrato!")
+    def menu_extrato(self, transactions):
+        """Exibe o extrato da conta."""
+        extrato = "\n".join([f"{transacao}" for transacao in transactions])
+        messagebox.showinfo("Extrato", f"===> EXTRATO DA CONTA <===\n{extrato}")
+
+    def menu_login(self):
+        """Solicita CPF e senha para login."""
+        cpf = simpledialog.askstring("Login", "Digite seu CPF")
+        senha = simpledialog.askstring("Login", "Digite sua senha", show='*')
+        return (cpf, senha)
+
+    def clear_screen(self):
+        """Limpa os widgets da tela atual."""
+        for widget in self.root.winfo_children():
+            widget.destroy()

@@ -1,11 +1,13 @@
-from bank import Bank
 from controller.control_box import ControlBox
-import tkinter as tk
+from tkinter import Tk
 
 def main():
-    root = tk.Tk()
-    rodando = True
+    root = Tk()
+    root.title("JPBank invest")
+    root.geometry("400x400")
     controller = ControlBox(root)
+    
+    controller.tela_inicial()
     root.mainloop()
     # Inicializa a conexão ao banco de dados
     #mysqlDB = Accounts_db(host="localhost", user="root", password="root", database="banks")
@@ -27,11 +29,7 @@ def main():
     #mysqlDB.execute_query(create_table_query)
     # Fecha a conexão com o banco
     #mysqlDB.disconnect()
-    while rodando:
-        controller.tela_inicial()
-    # Inicializa o objeto Bank
-    # Solicita o número da conta ao usuário
-            # Exibe as contas criadas e a data formatada
+
 
 
 # Executa a função principal
