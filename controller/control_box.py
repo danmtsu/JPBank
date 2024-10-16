@@ -1,88 +1,87 @@
-from view.interface import Interface
 from bank import Bank
+from view.interface import Interface
 
 class ControlBox:
-    def __init__(self,root):
+    def __init__(self, root):
         self.__bank = Bank()
         self.__menu = Interface(root)
         self.__user = None
         self.__conta = None
         self.__logado = False
 
-    @property
-    def bank(self):
-        return self.__bank
-
-    @property
-    def conta(self):
-        return self.__conta
-
-    @property
-    def user(self):
-        return self.__user
-
-    @property
-    def logado(self):
-        return self.__logado
-
-    @logado.setter
-    def logado(self, logado: bool):
-        self.__logado = logado
-
-
-    @user.setter
-    def user(self, user):
-        self.__user = user
+    def iniciar(self):
+        self.tela_inicial()
 
     def tela_inicial(self):
-        decisao = self.__menu.create_initial_screen()
-        if decisao == 1:
-            # Criação de conta
-            user = self.__menu.menu_signup()
-            self.__bank.criaConta(user)
+        while not self.__logado:  # Enquanto não estiver logado
+            decisao = self.__menu.menu_inicial()
 
-        elif decisao == 2:
-            # Processo de login
-            while not self.__logado:
-                info_login = self.__menu.menu_login()
-
-                # Verifica se o CPF existe nos usuários e a senha está correta
-                if f"{info_login[0]}" in self.__bank.users and info_login[1] == self.__bank.users[f"{info_login[0]}"].password:
-                    # Login bem-sucedido
-                    self.__user = self.__bank.users[f"{info_login[0]}"]
-                    self.__conta = self.__user.contas[0]  # Acessa a primeira conta do usuário
-                    self.__logado = True
+            if decisao == 1:
+                self.criar_conta()
+            elif decisao == 2:
+                if self.login():  # Se o login for bem-sucedido
                     print("Login realizado com sucesso!")
+                    self.tela_usuario()  # Chama a tela do usuário
                 else:
                     print("CPF ou senha incorretos. Tente novamente.")
+            elif decisao == 0:
+                print("Saindo da aplicação...")
+                break
 
-        if self.__logado:
-            self.tela_usuario()
+    def criar_conta(self):
+        user = self.__menu.menu_signup()
+        if user:  # Verifica se o usuário clicou em cancelar
+            self.__bank.criaConta(user)
+            print(f"Conta criada para {user['cpf']} com sucesso.")
 
+    def login(self):
+        info_login = self.__menu.menu_login()
+        if info_login:  # Verifica se o usuário clicou em cancelar
+            return self.login_user(info_login[0], info_login[1])
+        return False  # Retorna False se o usuário cancelar
 
+    def login_user(self, cpf, password):
+        if cpf in self.__bank.users and self.__bank.users[cpf].password == password:
+            self.__user = self.__bank.users[cpf]
+            self.__conta = self.__user.contas[0]  # Acessa a primeira conta do usuário
+            self.__logado = True
+            return True
+        return False
 
     def tela_usuario(self):
-        while self.__logado:
+        self.__menu.clear_screen()  # Limpa a tela antes de mostrar a tela do usuário
+        while self.__logado:  # Enquanto estiver logado
             decisao = self.__menu.menu_usuario()
 
             if decisao == 1:
-                # Depósito
-                conta_valor = self.__menu.menu_deposito()
-                self.__bank.realiza_deposito(conta_valor[0], conta_valor[1])
-
+                self.realiza_deposito()
             elif decisao == 2:
-                # Saque
-                valor = self.__menu.menu_saque()
-                self.__bank.realiza_saque(self.__conta, valor)
-
+                self.realiza_saque()
             elif decisao == 3:
-                # Verifica extrato
-                #extrato = self.__bank.verifica_extrato(self.__conta.numeroConta)
-                self.__menu.menu_extrato(self.__conta.transacoes)
-                print(f"Seu saldo atual é de:{self.__conta.saldo}")
-
+                self.verifica_extrato()
             elif decisao == 0:
-                # Logout
-                self.__logado = False
-                print("Logout realizado com sucesso.")
-                break
+                self.logout()
+
+    def realiza_deposito(self):
+        conta_valor = self.__menu.menu_deposito()
+        if conta_valor:
+            self.__bank.realiza_deposito(conta_valor[0], conta_valor[1])
+            print("Depósito realizado com sucesso.")
+
+    def realiza_saque(self):
+        valor = self.__menu.menu_saque()
+        if valor:
+            self.__bank.realiza_saque(self.__conta, valor)
+            print("Saque realizado com sucesso.")
+
+    def verifica_extrato(self):
+        self.__menu.menu_extrato(self.__conta.transacoes)
+
+    def logout(self):
+        self.__logado = False
+        self.__user = None
+        self.__conta = None
+        print("Você foi deslogado com sucesso.")
+
+        # Retorna à tela inicial após logout
+        self.tela_inicial()

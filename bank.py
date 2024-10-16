@@ -10,13 +10,7 @@ class Bank():
         self.today = datetime.today().date()
 
 
-    def criaConta(self, user:dict = {}, cpf: str = "",name:str = "", email:str = ""):
-        user["cpf"] = cpf
-        user["name"] = name
-        user["email"] = email
-        user["born"] = "01/04/1999"
-        user["address"] = "rua dos tolos 420"
-        user["name"] = "claudinete"
+    def criaConta(self, user:dict = {}):
         n = 0
         if user["cpf"] != None and user["cpf"] not in self.contas:
             if user["name"] and user["born"] and user["address"] != None:
@@ -29,7 +23,6 @@ class Bank():
                         n = 1
                 usuario.add_conta(new_account)
                 self.users[f"{user['cpf']}"] = usuario
-                print(f"{self.users}")
                 print("conta criada com sucesso")
 
         else:
