@@ -54,8 +54,10 @@ class Interface:
             btn_conta.pack(pady=5)
 
         self.root.mainloop()  # Inicia o loop de eventos do Tkinter para capturar a interação do usuário
+        number_account = selected_account.get()
+        messagebox.showinfo("Conta selecionada",f"Acessando a conta:{number_account}")
 
-        return selected_account.get()  # Retorna o número da conta selecionada
+        return number_account  # Retorna o número da conta selecionada
 
 
     def menu_signup(self):
@@ -98,6 +100,8 @@ class Interface:
         btn_extrato.pack(pady=5)
         btn_create_account = tk.Button(self.root, text="4 - Create new account", command=lambda: set_decision(4))
         btn_create_account.pack(pady=5)
+        btn_create_account = tk.Button(self.root, text="5 - Mudar de conta", command=lambda: set_decision(5))
+        btn_create_account.pack(pady=5)
 
 
         btn_exit = tk.Button(self.root, text="0 - Sair", command=lambda: set_decision(0))  # Botão de logout
@@ -117,10 +121,10 @@ class Interface:
         valor = simpledialog.askfloat("Saque", "Digite o valor que deseja sacar")
         return valor
 
-    def menu_extrato(self, transactions):
+    def menu_extrato(self, transactions, saldo_atual:float):
         """Exibe o extrato da conta."""
         extrato = "\n".join([f"{transacao}" for transacao in transactions])
-        messagebox.showinfo("Extrato", f"===> EXTRATO DA CONTA <===\n{extrato}")
+        messagebox.showinfo("Extrato", f"===> EXTRATO DA CONTA <===\n{extrato} \n Saldo atual: {saldo_atual}")
 
     def menu_login(self):
         """Solicita CPF e senha para login."""

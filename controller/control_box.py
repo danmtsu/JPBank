@@ -9,6 +9,17 @@ class ControlBox:
         self.__conta = None
         self.__logado = False
 
+    def change_accounts(self,):
+        """Abre uma tela com uma lista de contas para o usuário selecionar."""
+        contas = self.__bank.get_user_accounts(self.__user.cpf)  # Obter as contas do usuário
+        if contas:
+            selected_account = self.__bank.contas[self.__menu.menu_selecao_conta(contas)]
+            if selected_account:
+                self.__conta = selected_account  # Define a conta selecionada
+                self.tela_usuario()  # Acessa a tela de usuário com a conta selecionada
+            else:
+                print("Nenhuma conta selecionada.")
+
     def iniciar(self):
         self.tela_inicial()
 
@@ -65,6 +76,8 @@ class ControlBox:
                 self.verifica_extrato()
             elif decisao == 4:
                 self.create_account()
+            elif decisao == 5:
+                self.change_accounts()
             elif decisao == 0:
                 self.logout()
 
@@ -92,7 +105,7 @@ class ControlBox:
             print("Saque realizado com sucesso.")
 
     def verifica_extrato(self):
-        self.__menu.menu_extrato(self.__conta.transacoes)
+        self.__menu.menu_extrato(self.__conta.transacoes, self.__conta.saldo)
 
     def logout(self):
         self.__logado = False
