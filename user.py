@@ -8,7 +8,7 @@ class User:
         self.__address = address
         self.__email = email
         self.__born = born
-        self.contas = []
+        self.accounts = []
         self.__password = password
 
     @property
@@ -35,8 +35,8 @@ class User:
     def born(self,):
         return self.__born
     
-    
-    def mostra_contas(self,):
+    @property
+    def contas(self,):
         return self.accounts
     
     @name.setter
@@ -53,12 +53,12 @@ class User:
 
     
     def add_conta(self,conta:Conta):
-        self.contas.append(conta)
+        self.accounts.append(conta)
         print(f"Conta de numero: {conta.numeroConta} e agencia: {conta.agencia} criada")
 
 
     def rm_conta(self,conta:Conta):
-        self.contas.remove(conta)
+        self.accounts.remove(conta)
 
 
 

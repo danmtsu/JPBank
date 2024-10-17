@@ -9,24 +9,43 @@ class Bank():
         self.users = {}
         self.today = datetime.today().date()
 
-
-    def criaConta(self, user:dict = {}):
+    def createUser(self, user:dict = {}):
         n = 0
-        if user["cpf"] != None and user["cpf"] not in self.contas:
+        if user["cpf"] != None and user["cpf"] not in self.users:
             if user["name"] and user["born"] and user["address"] != None:
                 usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
-                while n < 1:
-                    numero_conta = str(random.randint(100000, 999999))
-                    if numero_conta not in self.contas:
-                        new_account = Conta(numero_conta,1000)
-                        self.contas[numero_conta] = new_account
-                        n = 1
-                usuario.add_conta(new_account)
                 self.users[f"{user['cpf']}"] = usuario
+                self.createaccount(user["cpf"])
                 print("conta criada com sucesso")
 
         else:
             print("cpf já existente")
+
+    def createaccount(self,cpf:str):
+        condition = True
+        user = self.users[cpf]
+        while condition:
+            numero_conta = str(random.randint(100000, 999999))
+            if numero_conta not in self.contas:
+                new_account = Conta(numero_conta, 1000)
+                condition = False
+        try:
+            if isinstance(new_account, Conta):
+                user.add_conta(new_account)
+                self.contas[numero_conta] = new_account
+                print("Conta criada com sucesso")
+                
+            else:
+                raise ValueError("Objeto passado não é uma instância de Conta.")
+        except ValueError as e:
+            print(f" Erro ao criar conta: {e}")
+
+    def get_user_accounts(self,cpf:str):
+        user = self.users[cpf]
+        try:
+            return user.contas
+        except ValueError as e:
+            print(f"Erro ao mostrar a conta: {e}")
 
     def realiza_deposito(self,numeroConta:str,valor:float):
         if int(valor) <= 0:

@@ -17,22 +17,26 @@ class ControlBox:
             decisao = self.__menu.menu_inicial()
 
             if decisao == 1:
-                self.criar_conta()
+                self.create_user()
             elif decisao == 2:
                 if self.login():  # Se o login for bem-sucedido
                     print("Login realizado com sucesso!")
-                    self.tela_usuario()  # Chama a tela do usuário
+                    self.tela_selecao_conta()  # Chama a tela do usuário
                 else:
                     print("CPF ou senha incorretos. Tente novamente.")
             elif decisao == 0:
                 print("Saindo da aplicação...")
                 break
 
-    def criar_conta(self):
+    def create_user(self):
         user = self.__menu.menu_signup()
         if user:  # Verifica se o usuário clicou em cancelar
-            self.__bank.criaConta(user)
+            self.__bank.createUser(user)
             print(f"Conta criada para {user['cpf']} com sucesso.")
+
+    def create_account(self,):
+        self.__bank.createaccount(self.__user.cpf)
+        self.tela_usuario()
 
     def login(self):
         info_login = self.__menu.menu_login()
@@ -59,9 +63,22 @@ class ControlBox:
                 self.realiza_saque()
             elif decisao == 3:
                 self.verifica_extrato()
+            elif decisao == 4:
+                self.create_account()
             elif decisao == 0:
                 self.logout()
 
+    def tela_selecao_conta(self):
+        """Abre uma tela com uma lista de contas para o usuário selecionar."""
+        contas = self.__bank.get_user_accounts(self.__user.cpf)  # Obter as contas do usuário
+        if contas:
+            selected_account = self.__bank.contas[self.__menu.menu_selecao_conta(contas)]
+            if selected_account:
+                self.__conta = selected_account  # Define a conta selecionada
+                self.tela_usuario()  # Acessa a tela de usuário com a conta selecionada
+            else:
+                print("Nenhuma conta selecionada.")
+            
     def realiza_deposito(self):
         conta_valor = self.__menu.menu_deposito()
         if conta_valor:

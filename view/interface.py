@@ -33,6 +33,30 @@ class Interface:
 
         self.root.mainloop()
         return self.__decision
+    
+    def menu_selecao_conta(self, contas):
+        """Exibe as contas como botões para o usuário selecionar uma."""
+        self.clear_screen() 
+
+        # Variável local para armazenar a seleção do usuário
+        selected_account = tk.StringVar()
+
+        def selecionar_conta(conta_numero):
+            """Define a conta selecionada e retorna o número da conta."""
+            selected_account.set(conta_numero)
+            self.root.quit()  # Fecha o loop principal para continuar a execução
+
+        label = tk.Label(self.root, text="Selecione a conta que deseja acessar:")
+        label.pack(pady=10)
+
+        for conta in contas:
+            btn_conta = tk.Button(self.root, text=f"Conta {conta.numeroConta}", command=lambda c=conta.numeroConta: selecionar_conta(c))
+            btn_conta.pack(pady=5)
+
+        self.root.mainloop()  # Inicia o loop de eventos do Tkinter para capturar a interação do usuário
+
+        return selected_account.get()  # Retorna o número da conta selecionada
+
 
     def menu_signup(self):
         """Formulário de cadastro de cliente."""
@@ -65,13 +89,16 @@ class Interface:
             self.root.quit()  # Fecha o loop de eventos do Tkinter
 
         btn_deposito = tk.Button(self.root, text="1 - Realizar depósito", command=lambda: set_decision(1))
-        btn_deposito.pack(pady=3)
+        btn_deposito.pack(pady=5)
 
         btn_saque = tk.Button(self.root, text="2 - Realizar saque", command=lambda: set_decision(2))
-        btn_saque.pack(pady=3)
+        btn_saque.pack(pady=5)
 
         btn_extrato = tk.Button(self.root, text="3 - Verificar extrato", command=lambda: set_decision(3))
-        btn_extrato.pack(pady=3)
+        btn_extrato.pack(pady=5)
+        btn_create_account = tk.Button(self.root, text="4 - Create new account", command=lambda: set_decision(4))
+        btn_create_account.pack(pady=5)
+
 
         btn_exit = tk.Button(self.root, text="0 - Sair", command=lambda: set_decision(0))  # Botão de logout
         btn_exit.pack(pady=3)
