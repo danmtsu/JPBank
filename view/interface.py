@@ -61,23 +61,91 @@ class Interface:
 
 
     def menu_signup(self):
-        """Formulário de cadastro de cliente."""
-        user = {}
-        user['cpf'] = simpledialog.askstring("Cadastro", "Digite seu CPF")
-        user['email'] = simpledialog.askstring("Cadastro", "Digite seu email")
-        password_correct = False
-        while not password_correct:
-            password1 = simpledialog.askstring("Cadastro", "Digite sua senha", show='*')
-            password2 = simpledialog.askstring("Cadastro", "Confirme sua senha", show='*')
-            if password1 == password2:
-                password_correct = True
+        # Função para submeter o formulário
+        def submit_form():
+            user_data = {
+                'cpf': entry_cpf.get(),
+                'email': entry_email.get(),
+                'password': entry_senha.get(),
+                'name': entry_nome.get(),
+                'born': entry_data_nascimento.get(),
+                'address': entry_endereco.get()
+            }
+
+            # Validações simples (verifica se todos os campos estão preenchidos)
+            if all(user_data.values()):
+                if entry_senha.get() == entry_confirm_senha.get():  # Confirmação de senha
+                    form_data.update(user_data)
+                    messagebox.showinfo("Sucesso", "Dados cadastrados com sucesso!")
+                    root.quit()  # Fecha o loop da interface
+                    root.destroy()  # Fecha a janela
+                else:
+                    messagebox.showerror("Erro", "As senhas não coincidem.")
             else:
-                messagebox.showerror("Erro", "As senhas não coincidem")
-        user['password'] = password1
-        user['name'] = simpledialog.askstring("Cadastro", "Digite seu nome")
-        user['born'] = simpledialog.askstring("Cadastro", "Data de nascimento (DD/MM/AAAA)")
-        user['address'] = simpledialog.askstring("Cadastro", "Digite seu endereço")
-        return user
+                messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
+
+        # Função para cancelar o formulário
+        def cancelar_form():
+            root.quit()  # Fecha o loop da interface
+            root.destroy()  # Fecha a janela
+
+        # Inicializa o dicionário para armazenar os dados do formulário
+        form_data = {}
+
+        # Criação da janela principal
+        root = tk.Tk()
+        root.title("Formulário de Cadastro")
+        root.geometry("400x750")
+
+        # Campos do formulário
+        label_cpf = tk.Label(root, text="CPF:")
+        label_cpf.pack(pady=5)
+        entry_cpf = tk.Entry(root)
+        entry_cpf.pack(pady=5)
+
+        label_email = tk.Label(root, text="Email:")
+        label_email.pack(pady=5)
+        entry_email = tk.Entry(root)
+        entry_email.pack(pady=5)
+
+        label_senha = tk.Label(root, text="Senha:")
+        label_senha.pack(pady=5)
+        entry_senha = tk.Entry(root, show="*")
+        entry_senha.pack(pady=5)
+
+        label_confirm_senha = tk.Label(root, text="Confirme sua senha:")
+        label_confirm_senha.pack(pady=5)
+        entry_confirm_senha = tk.Entry(root, show="*")
+        entry_confirm_senha.pack(pady=5)
+
+        label_nome = tk.Label(root, text="Nome:")
+        label_nome.pack(pady=5)
+        entry_nome = tk.Entry(root)
+        entry_nome.pack(pady=5)
+
+        label_data_nascimento = tk.Label(root, text="Data de nascimento (DD/MM/AAAA):")
+        label_data_nascimento.pack(pady=5)
+        entry_data_nascimento = tk.Entry(root)
+        entry_data_nascimento.pack(pady=5)
+
+        label_endereco = tk.Label(root, text="Endereço:")
+        label_endereco.pack(pady=5)
+        entry_endereco = tk.Entry(root)
+        entry_endereco.pack(pady=5)
+
+        # Botões de submissão e cancelamento
+        submit_button = tk.Button(root, text="Cadastrar", command=submit_form)
+        submit_button.pack(pady=10)
+
+        cancel_button = tk.Button(root, text="Cancelar", command=cancelar_form)
+        cancel_button.pack(pady=5)
+
+        root.mainloop()  # Loop principal da interface
+
+        return form_data 
+
+# Chamada da função
+
     
     def menu_usuario(self):
         """Menu para o usuário logado."""

@@ -1,5 +1,6 @@
 from bank import Bank
 from view.interface import Interface
+from tkinter import Tk
 
 class ControlBox:
     def __init__(self, root):
