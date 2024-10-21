@@ -62,17 +62,12 @@ class Bank():
             print(i)
     
     def realiza_saque(self,conta:Conta,valor:float):
-        if valor <= 0:
-            print( "valor de saque inválido")
-            return
-        if conta.numeroConta in self.contas:
-            if conta.saqueHoje <3:
-                if  valor <= 500 and valor <= conta.saldo:
-                    conta.realiza_saque(valor)
-                    print(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
-                    return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
-            else:
-                print("limite de saque excedido")
+        if conta.saqueHoje <3:
+            if  valor <= 500 and valor <= conta.saldo:
+                conta.realiza_saque(valor)
+                print(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
+                return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
         else:
-            print(f"{conta.numeroConta} inexistente.")
+            print("limite de saque excedido")
+
     
