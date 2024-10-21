@@ -204,3 +204,7 @@ class Interface:
         """Limpa os widgets da tela atual."""
         for widget in self.root.winfo_children():
             widget.destroy()
+
+    def alerts(self,name:str,text:str):
+        messagebox.showinfo(name, text)
+

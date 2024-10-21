@@ -45,16 +45,11 @@ class Bank():
         except ValueError as e:
             print(f"Erro ao mostrar a conta: {e}")
 
-    def realiza_deposito(self,numeroConta:str,valor:float):
-        if int(valor) <= 0:
-             print("Valor de depósito inválido")
-             return
-        if numeroConta in self.contas:
-            conta = self.contas[numeroConta]
-            conta.recebe_deposito(valor)     
-            return f"deposito de {valor} para a conta:{numeroConta};"
-        else:
-            return f"Digite uma conta existente"
+    def realiza_deposito(self, numeroConta: str, valor: float):
+        conta = self.contas[numeroConta]
+        conta.recebe_deposito(valor)
+        return f"Depósito de {valor} realizado com sucesso na conta {numeroConta}."
+
 
     def verify_user(self, cpf, password):
         for user in self.users:
