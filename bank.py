@@ -16,7 +16,6 @@ class Bank():
                 usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
                 self.users[f"{user['cpf']}"] = usuario
                 self.createaccount(user["cpf"])
-                print("conta criada com sucesso")
 
         else:
             print("cpf já existente")
@@ -33,7 +32,6 @@ class Bank():
             if isinstance(new_account, Conta):
                 user.add_conta(new_account)
                 self.contas[numero_conta] = new_account
-                print("Conta criada com sucesso")
                 
             else:
                 raise ValueError("Objeto passado não é uma instância de Conta.")

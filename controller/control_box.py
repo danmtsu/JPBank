@@ -1,6 +1,8 @@
 from bank import Bank
 from view.interface import Interface
 from tkinter import Tk
+import threading
+from threading import Lock, Semaphore
 
 class ControlBox:
     def __init__(self, root):
@@ -9,6 +11,7 @@ class ControlBox:
         self.__user = None
         self.__conta = None
         self.__logado = False
+        self.lock = Lock() #Mutex para proteger dados criticos
 
     def change_accounts(self,):
         """Abre uma tela com uma lista de contas para o usuário selecionar."""
@@ -43,7 +46,7 @@ class ControlBox:
     def create_user(self):
         user = self.__menu.menu_signup()
         if user:  # Verifica se o usuário clicou em cancelar
-            self.__bank.createUser(user)
+            threading.Thread(target=self.__thread_create_user, args=(user, )).start()
             print(f"Conta criada para {user['cpf']} com sucesso.")
 
     def create_account(self,):
@@ -96,14 +99,30 @@ class ControlBox:
     def realiza_deposito(self):
         conta_valor = self.__menu.menu_deposito()
         if conta_valor:
-            self.__bank.realiza_deposito(conta_valor[0], conta_valor[1])
+            deposito_thread = threading.Thread(target=self.__thread_deposito, args=(conta_valor[0], conta_valor[1]))
+            print("depósito está sendo processado")
+            deposito_thread.start()
             print("Depósito realizado com sucesso.")
+
+    def __thread_deposito(self,numero_conta,valor:float):
+        with self.lock: #Garantir que o saldo seja acessado de forma segura
+            self.__bank.realiza_deposito(numero_conta, valor)
+            print("Depósito realizado com sucesso")
+
+    def __thread_saque(self,numero_conta,valor:float):
+        with self.lock:
+            self.__bank.realiza_saque(numero_conta, valor)   
+            
+    def __thread_create_user(self,user):
+        self.__bank.createUser(user)
+        print("usuario criando")
 
     def realiza_saque(self):
         valor = self.__menu.menu_saque()
         if valor:
-            self.__bank.realiza_saque(self.__conta, valor)
-            print("Saque realizado com sucesso.")
+            thread_saque = threading.Thread(target=self.__thread_saque, args=(self.__conta, valor))
+            print("Saque está sendo processado")
+            thread_saque.start()
 
     def verifica_extrato(self):
         self.__menu.menu_extrato(self.__conta.transacoes, self.__conta.saldo)
