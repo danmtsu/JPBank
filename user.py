@@ -36,8 +36,8 @@ class User:
         return self.__born
     
     
-    def mostra_contas(self,):
-        return self.accounts
+    def contas(self,):
+        return self.contas
     
     @name.setter
     def name(self,name:str):
@@ -56,7 +56,7 @@ class User:
         self.contas.append(conta)
         print(f"Conta de numero: {conta.numeroConta} e agencia: {conta.agencia} criada")
 
-
+    
     def rm_conta(self,conta:Conta):
         self.contas.remove(conta)
 

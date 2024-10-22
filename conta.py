@@ -36,13 +36,17 @@ class Conta():
     def recebe_deposito(self,valor:float):
         self.__saldo +=valor
         print(f"deposito recebido seu saldo atual é de : {self.__saldo}")
-        self.transacoes.append(f"Depósito {self.today[0]} {self.today[1]} Valor de: {valor}")
+        now = datetime.now()
+        data_formatada = now.strftime("%Y-%m-%d %H:%M:%S")  # Formatação com segundos
+        self.transacoes.append(f"Depósito {data_formatada} Valor de: {valor}")
 
     def realiza_saque(self,valor:float):
         self.__saldo -= valor
         self.__saqueHoje +=1
         print(f"Saque realizado, seu saldo atual é de:{self.__saldo}")
-        self.transacoes.append(f"Saque {self.today[0]} {self.today[1]} Valor de: {valor}")
+        now = datetime.now()
+        data_formatada = now.strftime("%Y-%m-%d %H:%M:%S")  # Formatação com segundos
+        self.transacoes.append(f"Saque {data_formatada} Valor de: {valor}")
 
     def __str__(self) -> str:
         return f"Conta: {self.__numeroConta} Agência: {self.__agencia}"
