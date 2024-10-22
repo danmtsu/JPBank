@@ -144,7 +144,7 @@ class ControlBox:
         with self.lock:
             if self.__conta.saldo > valor and self.__conta.saqueHoje <3:
 
-                self.__bank.realiza_saque(self.__conta.numeroConta, valor)
+                self.__bank.realiza_saque(self.__conta, valor)
 
                 self.__menu.root.after(270,self.__menu.alerts,"Saque",f"Saque realizado com sucesso!\n Seu saldo atual é de {self.__conta.saldo}")  # Envia mensagem para a fila
             else:
@@ -178,7 +178,7 @@ class ControlBox:
     def realiza_saque(self):
         valor = self.__menu.menu_saque()
         if valor:
-            thread_saque = threading.Thread(target=self.__thread_saque, args=(self.__conta, valor))
+            thread_saque = threading.Thread(target=self.__thread_saque, args=(valor, ))
             print("Saque está sendo processado")
             thread_saque.start()
 
