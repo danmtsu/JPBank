@@ -10,15 +10,10 @@ class Bank():
         self.today = datetime.today().date()
 
     def createUser(self, user:dict = {}):
-        n = 0
-        if user["cpf"] != None and user["cpf"] not in self.users:
-            if user["name"] and user["born"] and user["address"] != None:
-                usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
-                self.users[f"{user['cpf']}"] = usuario
-                self.createaccount(user["cpf"])
-
-        else:
-            print("cpf já existente")
+        usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
+        self.users[str(usuario.cpf)] = usuario
+        self.createaccount(user["cpf"])
+        return usuario
 
     def createaccount(self,cpf:str):
         condition = True

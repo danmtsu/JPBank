@@ -208,3 +208,5 @@ class Interface:
     def alerts(self,name:str,text:str):
         messagebox.showinfo(name, text)
 
+    def errors(self,name:str, text:str):
+        messagebox.showerror(name,text)
