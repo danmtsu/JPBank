@@ -4,7 +4,8 @@ from tkinter import Tk
 import threading
 from threading import Lock, Semaphore
 from concurrent.futures import ThreadPoolExecutor
-
+import _mysql_connector
+from database import Accounts_db
 class ControlBox:
     def __init__(self, root):
         self.__bank = Bank()
@@ -13,6 +14,7 @@ class ControlBox:
         self.__user = None
         self.__conta = None
         self.__logado = False
+        self.__database = None
         self.lock = Lock() #Mutex para proteger dados criticos
 
     def change_accounts(self,):
@@ -27,7 +29,11 @@ class ControlBox:
                 print("Nenhuma conta selecionada.")
 
     def iniciar(self):
-        self.tela_inicial()
+        try:
+            self.init_database()
+            self.tela_inicial()
+        except Exception as e:
+            print( f"Exception is :{e}")
 
     def tela_inicial(self):
         while not self.__logado:  # Enquanto não estiver logado
@@ -58,7 +64,18 @@ class ControlBox:
             print(f"Conta criada para {user['cpf']} com sucesso.")
             self.tela_usuario()
             
+    def init_database(self):
+        threading.Thread(target=self.__thread_init_database).start()
+    
+    def __thread_init_database(self):
+        try:
+            self.__database = Accounts_db(host='localhost', user='root', password='root', database='banks')
+            self.__database.connect()
+            print("Conexão ao banco de dados foi um sucesso")
+        except Exception as e:
+            print(f"Erro ao conectar ao banco de dados: {e}")
 
+    
     def create_account(self,):
         self.__thread_create_account(self.__user.cpf)
 
