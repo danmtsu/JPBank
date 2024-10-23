@@ -7,9 +7,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: banks
-      MYSQL_PASSWORD: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
     ports:
       - "3306:3306"
     volumes:
-      - "./db/account_creator.sql:/docker-entrypoint-initdb.d/account_creator.sql"
+      - "./db/:/docker-entrypoint-initdb.d/bank_creator.sql"
       
