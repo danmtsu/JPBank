@@ -33,6 +33,7 @@ class User:
     
     @property
     def born(self,):
+        self.__born = datetime.strptime(self.__born, '%d/%m/%Y').strftime('%Y-%m-%d')
         return self.__born
     
     
