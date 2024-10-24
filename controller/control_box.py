@@ -6,6 +6,9 @@ from threading import Lock, Semaphore
 from concurrent.futures import ThreadPoolExecutor
 import _mysql_connector
 from database import Accounts_db
+from user import User
+from conta import Conta
+
 class ControlBox:
     def __init__(self, root):
         self.__bank = Bank()
@@ -66,7 +69,7 @@ class ControlBox:
             
     def init_database(self):
         threading.Thread(target=self.__thread_init_database).start()
-    
+
     def __thread_init_database(self):
         try:
             self.__database = Accounts_db(host='localhost', user='root', password='root', database='banks')
@@ -180,9 +183,15 @@ class ControlBox:
             try:
                 if user["cpf"] != None and user["cpf"] not in self.__bank.users and user["name"] and user["born"] and user["email"] is not None:
                     self.__user = self.__bank.createUser(user)
-                    self.__logado = True
-                    self.__conta = self.__user.contas[0]
-                    self.__menu.root.after(200,self.__menu.alerts,"Create user",f"Conta criada para {user['cpf']} com sucesso!")  # Envia mensagem para a fila
+                    if isinstance(self.__user, User):
+                        self.__database.execute_query(f"INSERT INTO User (cpf, nome, email, address, password, birthdate) VALUES ({int(self.__user.cpf)}, '{self.__user.name}', '{self.__user.email}', '{self.__user.address}', '{self.__user.password}', '{self.__user.born}');")
+                        self.__conta = self.__user.contas[0]
+                        if isinstance(self.__conta, Conta):
+                            self.__database.execute_query(f"INSERT INTO Accounts (numero_conta, agencia, saldo, cpf) VALUES ({int(self.__conta.numeroConta)}, {int(self.__conta.agencia)}, {float(self.__conta.saldo)}, {int(self.__user.cpf)});")
+                            self.__logado = True
+                            self.__menu.root.after(200,self.__menu.alerts,"Create user",f"Conta criada para {user['cpf']} com sucesso!")  # Envia mensagem para a fila
+                    else:
+                        raise ValueError('Object type is not right')
             except Exception as e:
                     self.__menu.errors( "Signup", f"Error: {e}")
 
@@ -207,5 +216,6 @@ class ControlBox:
         self.__user = None
         self.__conta = None
         print("Você foi deslogado com sucesso.")
+        self.__database.disconnect()
         self.tela_inicial()  # Retorna à tela inicial
 
