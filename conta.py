@@ -1,10 +1,10 @@
 from datetime import datetime
 
 class Conta():
-    def __init__(self,numero:str,agencia:int):
+    def __init__(self,numero:str,agencia:int,saldo:float = 0):
         self.__numeroConta = numero
         self.__agencia = agencia
-        self.__saldo = 0
+        self.__saldo = saldo
         self.__transacoes = []
         self.__saqueHoje = 0
         self.today = (datetime.today().date(), datetime.today().time())

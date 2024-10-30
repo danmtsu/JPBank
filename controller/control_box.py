@@ -27,15 +27,16 @@ class ControlBox:
             selected_account = self.__bank.contas[self.__menu.menu_selecao_conta(contas)]
             if selected_account:
                 self.__conta = selected_account  # Define a conta selecionada
-                self.tela_usuario()  # Acessa a tela de usuário com a conta selecionada
             else:
                 print("Nenhuma conta selecionada.")
 
     def iniciar(self):
         try:
-            self.init_database()
+            self.__bank.connect_bank(host='localhost', user='root', password='root', database='banks')
             self.tela_inicial()
+
         except Exception as e:
+            print("caiu aqui")
             print( f"Exception is :{e}")
 
     def tela_inicial(self):
@@ -54,8 +55,8 @@ class ControlBox:
         info_login = self.__menu.menu_login()
         self.login(info_login[0], info_login[1])
         if self.__logado:  # Se o login for bem-sucedido
+            self.tela_selecao_conta()
             print("Login realizado com sucesso!")
-            self.tela_selecao_conta()  # Chama a tela do usuário
         else:
             print("CPF ou senha incorretos. Tente novamente.")
 
@@ -63,36 +64,36 @@ class ControlBox:
     def create_user(self):
         user = self.__menu.menu_signup()
         if user:  # Verifica se o usuário clicou em cancelar
-            threading.Thread(target=self.__thread_create_user, args=(user, )).start()
+            self.__bank.createUser(user)
             print(f"Conta criada para {user['cpf']} com sucesso.")
             self.tela_usuario()
-            
-    def init_database(self):
-        threading.Thread(target=self.__thread_init_database).start()
-
-    def __thread_init_database(self):
-        try:
-            self.__database = Accounts_db(host='localhost', user='root', password='root', database='banks')
-            self.__database.connect()
-            print("Conexão ao banco de dados foi um sucesso")
-        except Exception as e:
-            print(f"Erro ao conectar ao banco de dados: {e}")
 
     
     def create_account(self,):
-        self.__thread_create_account(self.__user.cpf)
+        self.__bank.createaccount(self.__user.cpf)
 
     def login(self, cpf, password):
         if cpf and password:  # Verifica se o usuário clicou em cancelar
-            threading.Thread(target=self.__thread_login_user,args=(cpf,password)).start()
+            self.login_user()
+            
+
         return False  # Retorna False se o usuário cancelar
 
     def login_user(self, cpf, password):
-        if cpf in self.__bank.users and self.__bank.users[cpf].password == password:
-            self.__user = self.__bank.users[cpf]
-            self.__logado = True
-            return True
-        return False
+        try:
+            if cpf in self.__bank.users:
+                if self.__bank.users[cpf].password == password:
+                    self.__user = self.__bank.users[cpf]
+                    self.__logado = True
+                    self.__user.get_user_accounts(cpf)
+                    self.__menu.alerts("Login","Login realizado com sucesso!")  # Envia mensagem para a fila
+                else:
+                    self.__menu.errors("Login", "Senha incorreta")
+            else:   
+                self.__menu.errors("Login","CPF não encontrado")
+        except Exception as e:
+            self.__menu.errors("login",f"Erro ao realizar o login: {e}")
+
 
     def tela_usuario(self):
         self.__menu.clear_screen()  # Limpa a tela antes de mostrar a tela do usuário
@@ -112,7 +113,8 @@ class ControlBox:
             elif decisao == 0:
                 self.logout()
 
-    def tela_selecao_conta(self,contas:list):
+    def tela_selecao_conta(self,):
+        contas = self.__user.contas
         """Abre uma tela com uma lista de contas para o usuário selecionar."""
         if contas:
             selected_account = self.__bank.contas[self.__menu.menu_selecao_conta(contas)]
@@ -122,6 +124,8 @@ class ControlBox:
             else:
                 print("Nenhuma conta selecionada.")
                 self.tela_inicial
+        else:
+            print("usuario não possui nenhuma conta")
 
 
     def change_accounts(self,):
@@ -170,36 +174,8 @@ class ControlBox:
             else:
                 self.__menu.root.after(180,"Saque", f"você tem saldo para essa transferencias:{valor} e saques realizados hoje?{self.__conta.saqueHoje}")
 
-    def __thread_create_account(self,cpf):
-        with self.lock:
-            try:
-                self.__bank.createaccount(cpf)
-            except Exception as e:
-                print(f"Ocorreu um erro: {e}")
 
-            
-    def __thread_create_user(self,user):
-        with self.lock:
-            try:
-                if user["cpf"] != None and user["cpf"] not in self.__bank.users and user["name"] and user["born"] and user["email"] is not None:
-                    self.__user = self.__bank.createUser(user)
-                    if isinstance(self.__user, User):
-                        self.__database.execute_query(f"INSERT INTO User (cpf, nome, email, address, password, birthdate) VALUES ({int(self.__user.cpf)}, '{self.__user.name}', '{self.__user.email}', '{self.__user.address}', '{self.__user.password}', '{self.__user.born}');")
-                        self.__conta = self.__user.contas[0]
-                        if isinstance(self.__conta, Conta):
-                            self.__database.execute_query(f"INSERT INTO Accounts (numero_conta, agencia, saldo, cpf) VALUES ({int(self.__conta.numeroConta)}, {int(self.__conta.agencia)}, {float(self.__conta.saldo)}, {int(self.__user.cpf)});")
-                            self.__logado = True
-                            self.__menu.root.after(200,self.__menu.alerts,"Create user",f"Conta criada para {user['cpf']} com sucesso!")  # Envia mensagem para a fila
-                    else:
-                        raise ValueError('Object type is not right')
-            except Exception as e:
-                    self.__menu.errors( "Signup", f"Error: {e}")
 
-    def __thread_login_user(self,cpf, password:str):
-        if self.login_user(cpf,password):
-            self.__menu.alerts("Login","Login realizado com sucesso!")  # Envia mensagem para a fila
-        else:
-            self.__menu.alerts("Login","CPF ou senha incorretos. Tente novamente.")  # Envia mensagem para a fila
 
     def realiza_saque(self):
         valor = self.__menu.menu_saque()

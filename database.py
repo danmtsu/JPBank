@@ -28,21 +28,41 @@ class Accounts_db:
             self.__connection = None
             print("Você foi desconectado!")
 
-    def execute_query(self, query):
+        
+    def execute_query(self, query, params=None):
+        """
+        Executa uma query no banco de dados. Se for uma leitura (SELECT), retorna os resultados.
+        Se for uma alteração (INSERT, UPDATE, DELETE), realiza o commit automaticamente.
+
+        Args:
+            query (str): A query SQL a ser executada.
+            params (tuple): Os parâmetros para a query, caso seja uma query parametrizada.
+
+        Returns:
+            list: Resultados da consulta SELECT ou None para outras operações.
+        """
         if self.__connection is not None:
             try:
                 cursor = self.__connection.cursor()
-                cursor.execute(query)
-                self.__connection.commit()  # Se for uma query de alteração (INSERT, UPDATE, DELETE)
-                return cursor.fetchall()    # Se for uma query de leitura (SELECT)
+
+                # Se houver parâmetros, use-os, senão execute a query diretamente
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+
+                # Commit para operações de modificação de dados
+                if query.strip().upper().startswith('SELECT'):
+                    return cursor.fetchall()
+                else:
+                    self.__connection.commit()
+                    return None
+
             except mysql.connector.Error as err:
-                print(f"Erro ao executar a query: {err}")
-                return None
-            except Exception as e:
-                print(f"Erro inesperado: {e}")
-                return None
+                str = f"Erro ao executar a query: {err}"
+                return str
         else:
-            print("Conexão ao banco de dados não estabelecida.")
-            return None
-    
+            str = "Conexão ao banco de dados não estabelecida."
+            return str
+
 
