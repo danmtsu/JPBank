@@ -20,15 +20,6 @@ class ControlBox:
         self.__database = None
         self.lock = Lock() #Mutex para proteger dados criticos
 
-    def change_accounts(self,):
-        """Abre uma tela com uma lista de contas para o usuário selecionar."""
-        contas = self.__bank.get_user_accounts(self.__user.cpf)  # Obter as contas do usuário
-        if contas:
-            selected_account = self.__bank.contas[self.__menu.menu_selecao_conta(contas)]
-            if selected_account:
-                self.__conta = selected_account  # Define a conta selecionada
-            else:
-                print("Nenhuma conta selecionada.")
 
     def iniciar(self):
         try:
@@ -53,12 +44,8 @@ class ControlBox:
 
     def process_login(self):
         info_login = self.__menu.menu_login()
-        self.login(info_login[0], info_login[1])
-        if self.__logado:  # Se o login for bem-sucedido
-            self.tela_selecao_conta()
-            print("Login realizado com sucesso!")
-        else:
-            print("CPF ou senha incorretos. Tente novamente.")
+        self.login_user(info_login[0], info_login[1])
+
 
 
     def create_user(self):
@@ -72,21 +59,17 @@ class ControlBox:
     def create_account(self,):
         self.__bank.createaccount(self.__user.cpf)
 
-    def login(self, cpf, password):
-        if cpf and password:  # Verifica se o usuário clicou em cancelar
-            self.login_user()
-            
 
-        return False  # Retorna False se o usuário cancelar
 
     def login_user(self, cpf, password):
         try:
             if cpf in self.__bank.users:
                 if self.__bank.users[cpf].password == password:
-                    self.__user = self.__bank.users[cpf]
                     self.__logado = True
-                    self.__user.get_user_accounts(cpf)
-                    self.__menu.alerts("Login","Login realizado com sucesso!")  # Envia mensagem para a fila
+                    self.__bank.get_user_accounts(cpf)
+                    self.__menu.alerts("Login","Login realizado com sucesso!")
+                    self.__user = self.__bank.users[cpf]
+                    self.__menu.root.after(300,self.tela_selecao_conta,self.__user.contas) # Envia mensagem para a fila
                 else:
                     self.__menu.errors("Login", "Senha incorreta")
             else:   
@@ -113,13 +96,14 @@ class ControlBox:
             elif decisao == 0:
                 self.logout()
 
-    def tela_selecao_conta(self,):
-        contas = self.__user.contas
+    def tela_selecao_conta(self,contas:list):
         """Abre uma tela com uma lista de contas para o usuário selecionar."""
         if contas:
-            selected_account = self.__bank.contas[self.__menu.menu_selecao_conta(contas)]
+            print(contas)
+            selected_account = int(self.__menu.menu_selecao_conta(contas))
             if selected_account:
-                self.__conta = selected_account  # Define a conta selecionada
+                self.__conta = self.__bank.get_account_by_number(selected_account,self.__user.contas)
+                print(self.__conta.numeroConta)
                 self.tela_usuario()  # Acessa a tela de usuário com a conta selecionada
             else:
                 print("Nenhuma conta selecionada.")
