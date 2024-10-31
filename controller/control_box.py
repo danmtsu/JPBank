@@ -99,7 +99,6 @@ class ControlBox:
     def tela_selecao_conta(self,contas:list):
         """Abre uma tela com uma lista de contas para o usuário selecionar."""
         if contas:
-            print(contas)
             selected_account = int(self.__menu.menu_selecao_conta(contas))
             if selected_account:
                 self.__conta = self.__bank.get_account_by_number(selected_account,self.__user.contas)
@@ -127,25 +126,11 @@ class ControlBox:
     def realiza_deposito(self):
         conta_valor = self.__menu.menu_deposito()
         if conta_valor:
-            deposito_thread = threading.Thread(target=self.__thread_deposito, args=(conta_valor[0], conta_valor[1]))
-            deposito_thread.start()
+            self.__bank.realiza_deposito(conta_valor)
+            self.__menu.root.after(270,self.__menu.alerts,"Depósito",f"Depósito no valor de {conta_valor} realizado com sucesso!!")
             print("depósito está sendo processado")
-
-    def __thread_deposito(self,numero_conta,valor:float):
-        try:
-            with self.lock:
-                if str(numero_conta).strip() in self.__bank.contas:
-                    if valor > 0:
-                        self.__bank.realiza_deposito(numero_conta, valor)
-                        self.__menu.root.after(270, self.__menu.alerts, "Depósito","Depósito realizado com sucesso!")
-                    else:
-                        self.__menu.root.after(270, self.__menu.errors,"Depósito","Depósito","Valor do depósito inválido")
-                        print("Mensagem colocada na fila: Valor do depósito inválido")
-                else:
-                    self.__menu.root.after(270,self.__menu.errors,"Deposito","Conta de destino inexistente")
-                    print("Mensagem colocada na fila: Conta de destino inexistente")
-        except Exception as e:
-            print(f"Ocorreu um erro: {e}")
+        else:
+            self.__menu.root.after(270, self.__menu.errors,"Depósito", f"Erro ao realizar o Depósito")
 
 
     def __thread_saque(self,valor:float):
