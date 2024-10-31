@@ -89,18 +89,35 @@ class Bank():
                 raise ValueError("Objeto passado não é uma instância de Conta.")
         except ValueError as e:
             print(f" Erro ao criar conta: {e}")
+    
+    def get_account_by_number(self,numero:int, contas:list):
+        try:
+            if len(contas) >0:
+                numero = int(numero)
+                for conta in contas:
+                    if conta.numeroConta == numero:
+                        return conta                        
+            else:
+                raise ValueError("Atributo contas está vazio")
+
+        except ValueError as e:
+            print(f"error na busca da conta: {e}")
 
     def get_user_accounts(self,cpf:str):
         user = self.users[cpf]
         try:
-            if user.contas is not None:
+            print(user.contas)
+            if len(user.contas) == 0:
+                query = "SELECT numero_conta, agencia, saldo FROM Accounts WHERE cpf = %s"
+                listaContas = self.__database.execute_query(query=query,params=(cpf, ))
+                print(listaContas)
+                for conta in listaContas:
+                    numero_conta = int(conta[0])
+                    print(numero_conta)
+                    new_account = Conta(numero_conta,conta[1],conta[2])
+                    user.add_conta(new_account)
                 return user.contas
             else:
-                query = "SELECT (numero_conta,agencia,saldo) FROM Accounts WHERE cpf = %d"
-                listaContas = self.__database.execute_query(query=query,params=(cpf,))
-                for conta in listaContas:
-                    new_account = Conta(conta[0],conta[1],conta[2])
-                    user.add_conta(new_account)
                 return user.contas
         except ValueError as e:
             print(f"Erro ao mostrar a conta: {e}")
@@ -110,7 +127,8 @@ class Bank():
             try:
                 listaUsers = self.__database.execute_query(queryUser)
                 for user in listaUsers:
-                    self.users[user[0]] = User(user[0], user[4], user[1], user[3], user[2], user[5])
+                    cpf = str(user[0])
+                    self.users[cpf] = User(user[0], user[4], user[1], user[3], user[2], user[5])
             except Exception as e:
                 print(f"Exception: {e}")
             finally:
