@@ -56,7 +56,7 @@ class Bank():
                     usuario.password,  # Senha
                     usuario.born      # Data de nascimento
                 )
-                print(self.__database.execute_query(insert_user_query, user_params))
+                self.__database.execute_query(insert_user_query, user_params)
             self.createaccount(user["cpf"])
 
             return usuario
@@ -106,14 +106,11 @@ class Bank():
     def get_user_accounts(self,cpf:str):
         user = self.users[cpf]
         try:
-            print(user.contas)
             if len(user.contas) == 0:
                 query = "SELECT numero_conta, agencia, saldo FROM Accounts WHERE cpf = %s"
                 listaContas = self.__database.execute_query(query=query,params=(cpf, ))
-                print(listaContas)
                 for conta in listaContas:
                     numero_conta = int(conta[0])
-                    print(numero_conta)
                     new_account = Conta(numero_conta,conta[1],conta[2])
                     user.add_conta(new_account)
                 return user.contas
@@ -140,16 +137,29 @@ class Bank():
         with self.lock:
             try:
                 listaAccounts = self.__database.execute_query(queryAccount)
-                print(listaAccounts)
                 for account in listaAccounts:
-                    self.contas[account[0]] = Conta(account[0], account[1], account[2])
+                    self.contas[f"{int(account[1])}"] = Conta(int(account[0]), account[2], account[3])
             except Exception as e:
                 print(f"Exception is yes: {e}")
 
-    def realiza_deposito(self, numeroConta: str, valor: float):
-        conta = self.contas[numeroConta]
-        conta.recebe_deposito(valor)
-        return f"Depósito de {valor} realizado com sucesso na conta {numeroConta}."
+    def realiza_deposito(self, numero_valor:tuple):
+        print("Esse aqui é o numero conta"+str(numero_valor[0]))
+        print("esse é o valor "+str(numero_valor[1]))
+        print("está aqui \n \n \n \n \n \n \n \n \n \n \n \n \n viu")
+        try:
+            conta = self.contas[numero_valor[0]]
+            conta.recebe_deposito(numero_valor[1])
+    
+            # Inicia a thread corretamente
+            deposito_thread = threading.Thread(
+                target=self.__thread_realiza_deposito,
+                args=(numero_valor[0], conta.saldo)  # Passa o saldo atualizado
+            )
+            deposito_thread.start()
+    
+            return f"Depósito de {numero_valor[1]} realizado com sucesso na conta {numero_valor[0]}."
+        except Exception as e:
+            print(f"Exception is: {e}")
 
 
     def verify_user(self, cpf, password):
@@ -166,9 +176,27 @@ class Bank():
         if conta.saqueHoje <3:
             if  valor <= 500 and valor <= conta.saldo:
                 conta.realiza_saque(valor)
+                threading.Thread(target=self.__thread_realiza_saque,args=(conta, ))
                 print(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
                 return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
         else:
             print("limite de saque excedido")
 
-    
+    def __thread_realiza_deposito(self,numero_conta:str, valor:float):
+        print(valor, int(numero_conta))
+        with self.lock:
+            try:
+                query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
+                params = (valor, numero_conta)
+                self.__database.execute_query(query=query, params=params)
+            except Exception as e:
+                print(f"Exception Depósito is: {e}")
+
+    def __thread_realiza_saque(self,conta:Conta):
+        with self.lock:
+            try:
+                query = "UPDATE Accounts SET valor= %s WHERE numero_conta = %s"
+                params = (conta.saldo, conta.numeroConta)
+                self.__database.execute_query(query=query, params=params)
+            except Exception as e:
+                print(f"Exception saque is: {e}")
