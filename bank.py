@@ -4,7 +4,8 @@ from datetime import datetime
 from user import User
 from database import Accounts_db
 import threading
-from threading import Lock, Event
+from threading import Lock, Event, Semaphore
+from concurrent.futures import ThreadPoolExecutor
 
 class Bank():
     def __init__(self,):
@@ -13,7 +14,10 @@ class Bank():
         self.today = datetime.today().date()
         self.__database = None
         self.lock = Lock() #Mutex para proteger dados criticos
-        self.users_initialized = Event()
+        self.event = Event()
+        self.semaphore = Semaphore(1)
+        self.executor = ThreadPoolExecutor(4)
+
 
     @property
     def database(self,):
@@ -28,12 +32,9 @@ class Bank():
         self.__database = Accounts_db(host=host, database=database, password=password, user=user)
         self.__database.connect()
         
-        queryUser = "SELECT * FROM User"
-        queryAccount = "SELECT * FROM Accounts"
-        
         # Inicia thread de usuários e de contas
-        threading.Thread(target=self.__thread_init_bank_user, args=(queryUser, )).start()
-        threading.Thread(target=self.__thread_init_bank_account, args=(queryAccount, )).start()
+        self.executor.submit(self.__thread_init_bank_user)
+        self.executor.submit(self.__thread_init_bank_account)
 
         
 
@@ -120,48 +121,41 @@ class Bank():
         except ValueError as e:
             print(f"Erro ao mostrar a conta: {e}")
 
-    def __thread_init_bank_user(self, queryUser: str):
+    def __thread_init_bank_user(self,):
         with self.lock:
             try:
-                listaUsers = self.__database.execute_query(queryUser)
+                listaUsers = self.__database.execute_query("SELECT * FROM User")
                 for user in listaUsers:
                     cpf = str(user[0])
                     self.users[cpf] = User(user[0], user[4], user[1], user[3], user[2], user[5])
             except Exception as e:
                 print(f"Exception: {e}")
             finally:
-                self.users_initialized.set()  # Sinaliza a conclusão
+                self.event.set()  # Sinaliza a conclusão
 
     # Thread de inicialização de contas, aguardando o sinal da thread de usuários
-    def __thread_init_bank_account(self, queryAccount: str):
-        self.users_initialized.wait()  # Aguarda sinal de conclusão de usuários
+    def __thread_init_bank_account(self,):
+        self.event.wait()  # Aguarda sinal de conclusão de usuários
         with self.lock:
             try:
-                listaAccounts = self.__database.execute_query(queryAccount)
+                listaAccounts = self.__database.execute_query("SELECT * FROM Accounts")
                 for account in listaAccounts:
                     self.contas[f"{int(account[1])}"] = Conta(int(account[0]), account[2], account[3])
             except Exception as e:
                 print(f"Exception is yes: {e}")
+            finally:
+                self.event.set()
 
     def realiza_deposito(self, numero_valor:tuple):
         try:
-            conta = self.contas[numero_valor[0]]
-            print(numero_valor[1])
-            conta.recebe_deposito(numero_valor[1])
 
             # Inicia a thread corretamente
-            deposito_thread = threading.Thread(
-                target=self.__thread_realiza_deposito,
-                args=(numero_valor[0], conta.saldo)  # Passa o saldo atualizado
-            )
-            deposito_thread.start()
-            deposito_thread.join()
+            self.executor.submit(self.__thread_realiza_deposito,int(numero_valor[0]), numero_valor[1])
 
-            return True
         except Exception as e:
             print(f"Exception is: {e}")
             return False
-
+        
 
     def verify_user(self, cpf, password):
         for user in self.users:
@@ -174,34 +168,40 @@ class Bank():
             print(i)
     
     def realiza_saque(self,conta:Conta,valor:float):
-        try:
-            if  valor <= 1200 and valor < conta.saldo:
-                conta.realiza_saque(valor)
-                saqueThread = threading.Thread(target=self.__thread_realiza_saque,args=(conta.numeroConta, conta.saldo ))
-                saqueThread.start()
-                saqueThread.join()   
-        except Exception as e:
-            print(f"deu ruim aqui: {e}")
-            return False
+        self.executor.submit(self.__thread_realiza_saque,conta.numeroConta, valor )
 
-    def __thread_realiza_deposito(self,numero_conta:str, valor:float):
+
+    def __thread_realiza_deposito(self,numero_conta:int, valor:float):
         with self.lock:
+            self.semaphore.acquire()
             try:
+                conta = self.contas[f"{numero_conta}"]
+                conta.recebe_deposito(valor)
+
                 query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
-                params = (valor, numero_conta)
+                params = (conta.saldo, numero_conta)
                 self.__database.execute_query(query=query, params=params)
-                return True
             except Exception as e:
                 print(f"Exception Depósito is: {e}")
-                return False
+                
+            finally:
+                print("Depósito finalizado com sucesso")
+                self.semaphore.release()
 
     def __thread_realiza_saque(self,numero_conta:int, valor:float):
         with self.lock:
+            self.semaphore.acquire()
             try:
+                conta = self.contas[f"{numero_conta}"]
+                if  valor <= 1200 and valor < conta.saldo:
+                    conta.realiza_saque(valor)
                 query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
-                params = (valor, numero_conta)
+                params = (conta.saldo, numero_conta)
                 self.__database.execute_query(query=query, params=params)
                 
             except Exception as e:
                 print(f"Exception saque is: {e}")
-                return False
+            
+            finally:
+                print("Saque realizado com sucesso")
+                self.semaphore.release()
