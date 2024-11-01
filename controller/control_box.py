@@ -126,32 +126,24 @@ class ControlBox:
     def realiza_deposito(self):
         conta_valor = self.__menu.menu_deposito()
         if conta_valor:
-            self.__bank.realiza_deposito(conta_valor)
-            self.__menu.root.after(270,self.__menu.alerts,"Depósito",f"Depósito no valor de {conta_valor} realizado com sucesso!!")
-            print("depósito está sendo processado")
+            right_now = self.__bank.realiza_deposito(conta_valor)
+            if right_now:
+                self.__menu.root.after(300,self.__menu.alerts, "Depósito", f"Depósito no valor de {conta_valor[1]} deu boa!!")
+            else:
+                self.__menu.root.after(270, self.__menu.errors, "Depósito", f"Erro ao salvar o depósito")
+                print("depósito está sendo processado")
         else:
             self.__menu.root.after(270, self.__menu.errors,"Depósito", f"Erro ao realizar o Depósito")
-
-
-    def __thread_saque(self,valor:float):
-        with self.lock:
-            if self.__conta.saldo > valor and self.__conta.saqueHoje <3:
-
-                self.__bank.realiza_saque(self.__conta, valor)
-
-                self.__menu.root.after(270,self.__menu.alerts,"Saque",f"Saque realizado com sucesso!\n Seu saldo atual é de {self.__conta.saldo}")  # Envia mensagem para a fila
-            else:
-                self.__menu.root.after(180,"Saque", f"você tem saldo para essa transferencias:{valor} e saques realizados hoje?{self.__conta.saqueHoje}")
-
 
 
 
     def realiza_saque(self):
         valor = self.__menu.menu_saque()
         if valor:
-            thread_saque = threading.Thread(target=self.__thread_saque, args=(valor, ))
-            print("Saque está sendo processado")
-            thread_saque.start()
+            self.__bank.realiza_saque(self.__conta,valor)
+            self.__menu.root.after(300,self.__menu.alerts,"Saque","Saque realizado com sucesso!!")
+        else:
+            self.__menu.root.after(270,self.__menu.errors,"Saque error", "erro ao realizar o saque")
 
     def verifica_extrato(self):
         self.__menu.menu_extrato(self.__conta.transacoes, self.__conta.saldo)
