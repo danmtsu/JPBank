@@ -104,7 +104,8 @@ class Bank():
             print(f"error na busca da conta: {e}")
 
     def get_user_accounts(self,cpf:str):
-        user = self.users[cpf]
+        cpf = int(cpf)
+        user = self.users[f"{cpf}"]
         try:
             if len(user.contas) == 0:
                 query = "SELECT numero_conta, agencia, saldo FROM Accounts WHERE cpf = %s"
@@ -143,23 +144,23 @@ class Bank():
                 print(f"Exception is yes: {e}")
 
     def realiza_deposito(self, numero_valor:tuple):
-        print("Esse aqui é o numero conta"+str(numero_valor[0]))
-        print("esse é o valor "+str(numero_valor[1]))
-        print("está aqui \n \n \n \n \n \n \n \n \n \n \n \n \n viu")
         try:
             conta = self.contas[numero_valor[0]]
+            print(numero_valor[1])
             conta.recebe_deposito(numero_valor[1])
-    
+
             # Inicia a thread corretamente
             deposito_thread = threading.Thread(
                 target=self.__thread_realiza_deposito,
                 args=(numero_valor[0], conta.saldo)  # Passa o saldo atualizado
             )
             deposito_thread.start()
-    
-            return f"Depósito de {numero_valor[1]} realizado com sucesso na conta {numero_valor[0]}."
+            deposito_thread.join()
+
+            return True
         except Exception as e:
             print(f"Exception is: {e}")
+            return False
 
 
     def verify_user(self, cpf, password):
@@ -173,30 +174,34 @@ class Bank():
             print(i)
     
     def realiza_saque(self,conta:Conta,valor:float):
-        if conta.saqueHoje <3:
-            if  valor <= 500 and valor <= conta.saldo:
+        try:
+            if  valor <= 1200 and valor < conta.saldo:
                 conta.realiza_saque(valor)
-                threading.Thread(target=self.__thread_realiza_saque,args=(conta, ))
-                print(f'{self.today} Saque realizado de {valor}; Saldo: {conta.saldo}')
-                return f'Saque realizado de {valor}; Saldo: {conta.saldo}'                   
-        else:
-            print("limite de saque excedido")
+                saqueThread = threading.Thread(target=self.__thread_realiza_saque,args=(conta.numeroConta, conta.saldo ))
+                saqueThread.start()
+                saqueThread.join()   
+        except Exception as e:
+            print(f"deu ruim aqui: {e}")
+            return False
 
     def __thread_realiza_deposito(self,numero_conta:str, valor:float):
-        print(valor, int(numero_conta))
         with self.lock:
             try:
                 query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
                 params = (valor, numero_conta)
                 self.__database.execute_query(query=query, params=params)
+                return True
             except Exception as e:
                 print(f"Exception Depósito is: {e}")
+                return False
 
-    def __thread_realiza_saque(self,conta:Conta):
+    def __thread_realiza_saque(self,numero_conta:int, valor:float):
         with self.lock:
             try:
-                query = "UPDATE Accounts SET valor= %s WHERE numero_conta = %s"
-                params = (conta.saldo, conta.numeroConta)
+                query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
+                params = (valor, numero_conta)
                 self.__database.execute_query(query=query, params=params)
+                
             except Exception as e:
                 print(f"Exception saque is: {e}")
+                return False
