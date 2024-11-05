@@ -101,7 +101,7 @@ class ControlBox:
         if contas:
             selected_account = int(self.__menu.menu_selecao_conta(contas))
             if selected_account:
-                self.__conta = self.__bank.get_account_by_number(selected_account,self.__user.contas)
+                self.__conta = self.__bank.get_account_by_number(selected_account,self.__bank.contas,isList=False)
                 print(self.__conta.numeroConta)
                 self.tela_usuario()  # Acessa a tela de usuário com a conta selecionada
             else:

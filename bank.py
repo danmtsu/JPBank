@@ -91,15 +91,22 @@ class Bank():
         except ValueError as e:
             print(f" Erro ao criar conta: {e}")
     
-    def get_account_by_number(self,numero:int, contas:list):
+    def get_account_by_number(self,numero:int, contas,isList:bool = True):
         try:
-            if len(contas) >0:
-                numero = int(numero)
-                for conta in contas:
-                    if conta.numeroConta == numero:
-                        return conta                        
+            if isList:
+                if len(contas) >0:
+                    numero = int(numero)
+                    for conta in contas:
+                        if conta.numeroConta == numero:
+                            return conta                        
+                else:
+                    raise ValueError("Atributo contas está vazio")
             else:
-                raise ValueError("Atributo contas está vazio")
+                if str(numero) in contas:
+                    return contas[f"{numero}"]
+                else:
+                    raise ValueError("Numero de conta inválido")
+                    
 
         except ValueError as e:
             print(f"error na busca da conta: {e}")
