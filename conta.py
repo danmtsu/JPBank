@@ -48,5 +48,18 @@ class Conta():
         data_formatada = now.strftime("%Y-%m-%d %H:%M:%S")  # Formatação com segundos
         self.transacoes.append(f"Saque {data_formatada} Valor de: {valor}")
 
+    def recebe_transferencia(self,valor:float):
+        now = datetime.now()
+        data_formatada = now.strftime("%Y-%m-%d %H:%M:%S")  # Formatação com segundos
+        self.transacoes.append(f"Transferencia recebida {data_formatada} Valor de: {valor}")
+        self.__saldo += valor
+
+    def realiza_transferencia(self,valor:float):
+        self.__saldo -= valor
+        print(f"Saque realizado, seu saldo atual é de:{self.__saldo}")
+        now = datetime.now()
+        data_formatada = now.strftime("%Y-%m-%d %H:%M:%S")  # Formatação com segundos
+        self.transacoes.append(f"Transferencia enviada {data_formatada} Valor de: {valor}")
+
     def __str__(self) -> str:
         return f"Conta: {self.__numeroConta} Agência: {self.__agencia}"

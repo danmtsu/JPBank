@@ -88,10 +88,12 @@ class ControlBox:
             elif decisao == 2:
                 self.realiza_saque()
             elif decisao == 3:
-                self.verifica_extrato()
+                self.realiza_transferencia()
             elif decisao == 4:
-                self.create_account()
+                self.verifica_extrato()
             elif decisao == 5:
+                self.create_account()
+            elif decisao == 6:
                 self.change_accounts()
             elif decisao == 0:
                 self.logout()
@@ -144,6 +146,21 @@ class ControlBox:
             self.__menu.root.after(300,self.__menu.alerts,"Saque","Saque realizado com sucesso!!")
         else:
             self.__menu.root.after(270,self.__menu.errors,"Saque error", "erro ao realizar o saque")
+   
+    def realiza_transferencia(self):
+        conta_valor = self.__menu.menu_transferencia()
+
+        if conta_valor:
+            numero_conta_destino, valor = conta_valor
+            sucesso, mensagem = self.__bank.realiza_transacao(self.__conta, valor,numero_conta_destino)
+
+            if sucesso:
+                self.__menu.root.after(300, self.__menu.alerts, "Transferência", f"Transferência de {valor} realizada com sucesso!")
+            else:
+                self.__menu.root.after(270, self.__menu.errors, "Transferência", f"Erro ao realizar transferência: {mensagem}")
+        else:
+            self.__menu.root.after(270, self.__menu.errors, "Transferência", "Erro ao coletar dados para a transferência")
+
 
     def verifica_extrato(self):
         self.__menu.menu_extrato(self.__conta.transacoes, self.__conta.saldo)

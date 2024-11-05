@@ -147,7 +147,7 @@ class Bank():
             try:
                 listaAccounts = self.__database.execute_query("SELECT * FROM Accounts")
                 for account in listaAccounts:
-                    self.contas[f"{int(account[1])}"] = Conta(int(account[0]), account[2], account[3])
+                    self.contas[f"{int(account[1])}"] = Conta(int(account[1]), account[2], account[3])
             except Exception as e:
                 print(f"Exception is yes: {e}")
             finally:
@@ -176,6 +176,47 @@ class Bank():
     
     def realiza_saque(self,conta:Conta,valor:float):
         self.executor.submit(self.__thread_realiza_saque,conta.numeroConta, valor )
+
+    def realiza_transacao(self, conta: Conta, valor: float, contaDestino: int):
+        print(contaDestino)
+        print(conta.saldo)
+        if str(contaDestino) not in self.contas:
+            return False, "Conta de destino não encontrada."
+
+        # Valida a operação na conta origem e destino
+        if valor <= conta.saldo:
+            conta.realiza_transferencia(valor)
+
+            conta_destino_obj = self.contas[str(contaDestino)]
+            print(conta)
+            print(conta_destino_obj)
+            conta_destino_obj.recebe_transferencia(valor)
+        else:
+            return False, "Saldo insuficiente para a transferencia"
+        # Envia a tarefa para o executor
+        self.executor.submit(self.__thread_realiza_transacao, conta, valor, conta_destino_obj) 
+        return True, "Transferencia sendo processada."
+
+    def __thread_realiza_transacao(self, contaOrigem: Conta, valor: float, contaDestino: Conta):
+        with self.lock:
+            try:
+                print("chegou aqui")
+                # Executa a transação como um bloco atômico
+                queries = [
+                    ("UPDATE Accounts SET saldo = %s WHERE numero_conta = %s", (contaOrigem.saldo, contaOrigem.numeroConta)),
+                    ("UPDATE Accounts SET saldo = %s WHERE numero_conta = %s", (contaDestino.saldo, contaDestino.numeroConta)),
+                    ("INSERT INTO Transfers (conta_origem, conta_destino, tipo_transfer, valor) VALUES (%s, %s, 3, %s)",
+                     (contaOrigem.numeroConta, contaDestino.numeroConta, valor))
+                ]
+
+                # Executa cada query
+                for query, params in queries:
+                    self.__database.execute_query(query, params)
+                    print("executou aqui")
+
+
+            except Exception as e:
+                print(f"Erro na transferência: {e}")
 
 
     def __thread_realiza_deposito(self,numero_conta:int, valor:float):

@@ -164,11 +164,13 @@ class Interface:
         btn_saque = tk.Button(self.root, text="2 - Realizar saque", command=lambda: set_decision(2))
         btn_saque.pack(pady=5)
 
-        btn_extrato = tk.Button(self.root, text="3 - Verificar extrato", command=lambda: set_decision(3))
+        btn_transferencia = tk.Button(self.root, text="1 - Realizar Transferencia", command=lambda: set_decision(3))
+        btn_transferencia.pack(pady=5)
+        btn_extrato = tk.Button(self.root, text="3 - Verificar extrato", command=lambda: set_decision(4))
         btn_extrato.pack(pady=5)
-        btn_create_account = tk.Button(self.root, text="4 - Create new account", command=lambda: set_decision(4))
+        btn_create_account = tk.Button(self.root, text="4 - Create new account", command=lambda: set_decision(5))
         btn_create_account.pack(pady=5)
-        btn_create_account = tk.Button(self.root, text="5 - Mudar de conta", command=lambda: set_decision(5))
+        btn_create_account = tk.Button(self.root, text="5 - Mudar de conta", command=lambda: set_decision(6))
         btn_create_account.pack(pady=5)
 
 
@@ -188,6 +190,15 @@ class Interface:
         """Coleta o valor para saque."""
         valor = simpledialog.askfloat("Saque", "Digite o valor que deseja sacar")
         return valor
+    
+    def menu_transferencia(self):
+        """Coleta número da conta de destino e valor para transferência."""
+        numero_conta_destino = simpledialog.askstring("Transferência", "Digite o número da conta de destino")
+        valor = simpledialog.askfloat("Transferência", "Digite o valor da transferência")
+
+        if numero_conta_destino and valor:
+            return (numero_conta_destino, valor)
+        return None
 
     def menu_extrato(self, transactions, saldo_atual:float):
         """Exibe o extrato da conta."""
