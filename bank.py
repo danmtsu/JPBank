@@ -24,6 +24,7 @@ class Bank():
         self.thread_transacoes.start() 
 
 
+
     @property
     def database(self,):
         return self.__database
@@ -130,6 +131,20 @@ class Bank():
 
         except ValueError as e:
             print(f"error na busca da conta: {e}")
+
+    def get_user_for_login(self,cpf:str,password:str):
+        try:
+            query = f"SELECT * FROM Users WHERE cpf = {cpf}"
+            user = self.database.execute_query(query=query)
+            print(user[0][4])
+            if user[0][4] == password:
+                return user[0]
+            else:
+                raise ValueError("Credenciais inválidas")
+                
+        except ValueError as e:
+            print(f"Erro ao buscar o usuário: {e}")
+            return None
 
     def get_user_accounts(self,cpf:str):
         cpf = int(cpf)

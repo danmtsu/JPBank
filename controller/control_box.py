@@ -68,9 +68,10 @@ class ControlBox:
             self.__menu.errors("Conta", f"Erro ao criar conta: {e}")
 
     def login_user(self, cpf, password):
+        print(cpf, password)
         try:
-            user = self.__bank.verify_user(cpf, password)
-            if user:
+            user = self.__bank.get_user_for_login(cpf=cpf, password=password)
+            if user is not None:
                 self.__logado = True
                 self.__user = user
                 self.__menu.alerts("Login", "Login realizado com sucesso!")
@@ -78,6 +79,7 @@ class ControlBox:
             else:
                 self.__menu.errors("Login", "Credenciais inválidas.")
         except Exception as e:
+            print(e)
             self.__menu.errors("Login", f"Erro ao realizar login: {e}")
 
     def tela_usuario(self):
