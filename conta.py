@@ -60,6 +60,9 @@ class Conta():
         now = datetime.now()
         data_formatada = now.strftime("%Y-%m-%d %H:%M:%S")  # Formatação com segundos
         self.transacoes.append(f"Transferencia enviada {data_formatada} Valor de: {valor}")
+    
+    def add_transactions(self,transfer):
+        self.transacoes.append(transfer)
 
     def __str__(self) -> str:
         return f"Conta: {self.__numeroConta} Agência: {self.__agencia}"

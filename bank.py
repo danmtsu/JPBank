@@ -2,10 +2,12 @@ from conta import Conta
 import random
 from datetime import datetime
 from user import User
-from database import Accounts_db
+from database import AccountsDB
 import threading
 from threading import Lock, Event, Semaphore
 from concurrent.futures import ThreadPoolExecutor
+import queue
+import time
 
 class Bank():
     def __init__(self,):
@@ -16,7 +18,10 @@ class Bank():
         self.lock = Lock() #Mutex para proteger dados criticos
         self.event = Event()
         self.semaphore = Semaphore(1)
-        self.executor = ThreadPoolExecutor(4)
+        self.executor = ThreadPoolExecutor(2)
+        self.fila_transacoes = queue.Queue()
+        self.thread_transacoes = threading.Thread(target=self.__processa_fila_transacoes, daemon=True)
+        self.thread_transacoes.start() 
 
 
     @property
@@ -25,18 +30,23 @@ class Bank():
     
     @database.setter
     def database(self,host:str, user:str,password:str,database:str):
-        self.__database = Accounts_db(host=host,user=user,password=password,database=database)
+        self.__database = AccountsDB(host=host,user=user,password=password,database=database)
 
     # Configuração do banco e threads
-    def connect_bank(self, host: str, database: str, password: str, user: str):
-        self.__database = Accounts_db(host=host, database=database, password=password, user=user)
+    def connect_bank(self, database: str):
+        self.__database = AccountsDB(database=database)
         self.__database.connect()
+    
         
         # Inicia thread de usuários e de contas
         self.executor.submit(self.__thread_init_bank_user)
         self.executor.submit(self.__thread_init_bank_account)
 
         
+    def disconnect_bank(self):
+        if self.__database:
+            self.__database.close()
+
 
     def createUser(self, user:dict = {}):
         if str(user["cpf"]) not in self.users and user["cpf"] and user["name"] and user["password"] and user["address"] and user["born"] is not None:
@@ -45,9 +55,10 @@ class Bank():
             if isinstance(usuario, User):
                 # Insere o novo usuário no banco de dados, usando query parametrizada
                 insert_user_query = """
-                    INSERT INTO User (cpf, nome, email, address, password, birthdate) 
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO User (cpf, nome, email, address, password, birthdate) 
+                VALUES (?, ?, ?, ?, ?, ?)
                 """
+
                 print(user)
                 user_params = (
                     int(usuario.cpf),  # CPF
@@ -73,9 +84,10 @@ class Bank():
         try:
             if isinstance(new_account, Conta):
                 insert_account_query = """
-                    INSERT INTO Accounts (numero_conta, agencia, saldo, cpf) 
-                    VALUES (%s, %s, %s, %s)
+                INSERT INTO accounts (numero_conta, agencia, saldo, cpf) 
+                VALUES (?, ?, ?, ?)
                 """
+
                 account_params = (
                     int(new_account.numeroConta),  # Número da conta
                     int(new_account.agencia),      # Agência
@@ -116,8 +128,9 @@ class Bank():
         user = self.users[f"{cpf}"]
         try:
             if len(user.contas) == 0:
-                query = "SELECT numero_conta, agencia, saldo FROM Accounts WHERE cpf = %s"
-                listaContas = self.__database.execute_query(query=query,params=(cpf, ))
+                query = "SELECT numero_conta, agencia, saldo FROM accounts WHERE cpf = ?"
+                listaContas = self.__database.execute_query(query=query, params=(str(cpf), ))
+
                 for conta in listaContas:
                     numero_conta = int(conta[0])
                     new_account = Conta(numero_conta,conta[1],conta[2])
@@ -127,6 +140,35 @@ class Bank():
                 return user.contas
         except ValueError as e:
             print(f"Erro ao mostrar a conta: {e}")
+
+    def __processa_fila_transacoes(self):
+            while True:
+                # Bloqueia até que haja uma nova transação na fila
+                transacao = self.fila_transacoes.get()  # Bloqueia até ter uma transação
+
+                # Extrai os dados da transação
+                tipo = transacao['tipo']
+                conta_origem = transacao['conta_origem']
+                conta_destino = transacao['conta_destino']
+                valor = transacao['valor']
+
+                try:
+                    # Insere a transação na tabela Transfers
+                    query = """
+                        INSERT INTO Transfers (conta_origem, conta_destino, tipo_transfer, valor, created_at)
+                        VALUES (%s, %s, %s, %s, NOW())
+                    """
+                    tipo_transfer = 1 if tipo == 'deposito' else 2  # Define o tipo de transferência
+
+                    # Executa a inserção na tabela
+                    self.__database.execute_query(query, (conta_origem, conta_destino, tipo_transfer, valor))
+
+                except Exception as e:
+                    print(f"Erro ao registrar transação na tabela Transfers: {e}")
+
+                finally:
+                    # Marca a tarefa como concluída para a fila
+                    self.fila_transacoes.task_done()
 
     def __thread_init_bank_user(self,):
         with self.lock:
@@ -152,13 +194,24 @@ class Bank():
                 print(f"Exception is yes: {e}")
             finally:
                 self.event.set()
+                
+    def __thread_get_account_transfers(self,Account:Conta):
+        with self.lock:
+            try:
+                listaTransfers = self.__database.execute_query(f"SELECT * FROM Transfers WHERE conta_origem = {Account.numeroConta}")
+                for transfer in listaTransfers:
+                    Account.add_transactions(transfer)
+            except Exception as e:
+                print('{e}')
+            finally:
+                self.event.set()
 
     def realiza_deposito(self, numero_valor:tuple):
         try:
 
             # Inicia a thread corretamente
             self.executor.submit(self.__thread_realiza_deposito,int(numero_valor[0]), numero_valor[1])
-
+            return True
         except Exception as e:
             print(f"Exception is: {e}")
             return False
@@ -170,14 +223,43 @@ class Bank():
                 return True
         return False
 
-    def verifica_extrato(self,transacoes:list):
-        for i in transacoes:
-            print(i)
+    def verifica_extrato(self, numero_conta):
+        try:
+            conta = self.contas.get(str(numero_conta))
+            if conta:
+                self.executor.submit(self.__thread_get_account_transfers, conta)
+                return conta.transacoes
+            else:
+                print("Conta não encontrada.")
+                return []
+        except Exception as e:
+            print(f"Erro ao consultar o extrato: {e}")
+            return []
+    
+    def formatar_extrato(self, transacoes,numero_conta):
+        if not transacoes:
+            return "Nenhuma transação encontrada."
+
+        extrato_formatado = "Extrato da Conta:\n"
+        for transacao in transacoes:
+            origem, destino, tipo, valor, data = transacao
+            if origem == destino:
+                operacao = "Depósito" if tipo == 1 else "Saque"
+            else:
+                operacao = "Transferência Enviada" if origem == numero_conta else "Transferência Recebida"
+
+            extrato_formatado += f"{data} - {operacao} - Valor: R${valor:.2f} - Destino: {destino if operacao == 'Transferência Enviada' else origem}\n"
+        return extrato_formatado
+
     
     def realiza_saque(self,conta:Conta,valor:float):
-        self.executor.submit(self.__thread_realiza_saque,conta.numeroConta, valor )
-
-    def realiza_transacao(self, conta: Conta, valor: float, contaDestino: int):
+        try:
+            self.executor.submit(self.__thread_realiza_saque,conta.numeroConta, valor )
+        except Exception as e:
+            print(f"Exception is: {e}")
+            return False
+        
+    def run_transfer(self, conta: Conta, valor: float, contaDestino: int):
         print(contaDestino)
         print(conta.saldo)
         if str(contaDestino) not in self.contas:
@@ -229,6 +311,9 @@ class Bank():
                 query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
                 params = (conta.saldo, numero_conta)
                 self.__database.execute_query(query=query, params=params)
+                add_transfer = "INSERT INTO Transfers (conta_origem, conta_destino, tipo_transfer, valor) VALUES (%s, %s, %s, %s)"
+                params_transfer = ( numero_conta, None, 1,  valor)
+                self.__database.execute_query(query=add_transfer,params=params_transfer)
             except Exception as e:
                 print(f"Exception Depósito is: {e}")
                 
@@ -246,6 +331,10 @@ class Bank():
                 query = "UPDATE Accounts SET saldo = %s WHERE numero_conta = %s"
                 params = (conta.saldo, numero_conta)
                 self.__database.execute_query(query=query, params=params)
+                add_transfer = "INSERT INTO Transfers (conta_origem, conta_destino, tipo_transfer, valor) VALUES (%s, %s, %s, %s)"
+                params_transfer = (numero_conta,None, 2,valor)
+                self.__database.execute_query(query=add_transfer,params=params_transfer)
+
                 
             except Exception as e:
                 print(f"Exception saque is: {e}")

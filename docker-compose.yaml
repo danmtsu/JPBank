@@ -12,5 +12,5 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - "./db/:/docker-entrypoint-initdb.d/bank_creator.sql"
+       - "./db/bank_creator.sql:/docker-entrypoint-initdb.d/bank_creator.sql"
       
