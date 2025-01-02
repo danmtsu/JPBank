@@ -4,14 +4,12 @@ from view.interface import Interface
 from tkinter import Tk
 import threading
 from threading import Lock
-from database import AccountsDB
 from user import User
 from conta import Conta
 
 class ControlBox:
     def __init__(self, root):
-        self.__database = AccountsDB(host='localhost', user='root', password='root', database='banks')
-        self.__bank = Bank(database=self.__database)
+        self.__bank = Bank()
         self.__root = root
         self.__menu = Interface(self.__root)
         self.__user = None
@@ -56,7 +54,7 @@ class ControlBox:
         user_data = self.__menu.menu_signup()
         if user_data:  # Verifica se o usuário clicou em cancelar
             try:
-                self.__bank.create_user(user_data)
+                self.__bank.createUser(user_data)
                 print(f"Conta criada para {user_data['cpf']} com sucesso.")
                 self.tela_usuario()
             except Exception as e:
@@ -64,14 +62,14 @@ class ControlBox:
 
     def create_account(self):
         try:
-            self.__bank.create_account(self.__user.cpf)
+            self.__bank.createAccount(self.__user.cpf)
             self.__menu.alerts("Conta", "Conta criada com sucesso!")
         except Exception as e:
             self.__menu.errors("Conta", f"Erro ao criar conta: {e}")
 
     def login_user(self, cpf, password):
         try:
-            user = self.__bank.get_user(cpf, password)
+            user = self.__bank.verify_user(cpf, password)
             if user:
                 self.__logado = True
                 self.__user = user

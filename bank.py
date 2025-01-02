@@ -14,7 +14,7 @@ class Bank():
         self.contas = {}
         self.users = {}
         self.today = datetime.today().date()
-        self.__database = None
+        self.__database = AccountsDB(database='./db/banks.db')
         self.lock = Lock() #Mutex para proteger dados criticos
         self.event = Event()
         self.semaphore = Semaphore(1)
@@ -33,7 +33,7 @@ class Bank():
         self.__database = AccountsDB(host=host,user=user,password=password,database=database)
 
     # Configuração do banco e threads
-    def connect_bank(self, database: str):
+    def connect_bank(self, database: str='./db/banks.db'):
         self.__database = AccountsDB(database=database)
         self.__database.connect()
     
@@ -48,32 +48,40 @@ class Bank():
             self.__database.close()
 
 
-    def createUser(self, user:dict = {}):
-        if str(user["cpf"]) not in self.users and user["cpf"] and user["name"] and user["password"] and user["address"] and user["born"] is not None:
-            usuario = User(user["cpf"],user["password"],user["name"],user["address"],user["email"],user["born"])
-            self.users[str(usuario.cpf)] = usuario
-            if isinstance(usuario, User):
-                # Insere o novo usuário no banco de dados, usando query parametrizada
+    def createUser(self, user: dict = {}):
+        try:
+            if all(user.get(key) for key in ["cpf", "name", "password", "address", "born", "email"]):
+                # Assume o formato da data já como 'YYYY-MM-DD'
+                born_date = user["born"]
+
+                usuario = User(
+                    user["cpf"], user["password"], user["name"], 
+                    user["address"], user["email"], born_date
+                )
+
+                # Query para inserir no banco
                 insert_user_query = """
-                INSERT INTO User (cpf, nome, email, address, password, birthdate) 
+                INSERT INTO Users (cpf, nome, email, address, hashed_password, birthdate) 
                 VALUES (?, ?, ?, ?, ?, ?)
                 """
-
-                print(user)
                 user_params = (
-                    int(usuario.cpf),  # CPF
-                    usuario.name,      # Nome
-                    usuario.email,     # Email
-                    usuario.address,   # Endereço
-                    usuario.password,  # Senha
-                    usuario.born      # Data de nascimento
+                    usuario.cpf, usuario.name, usuario.email, 
+                    usuario.address, usuario.password, usuario.born
                 )
+
+                # Insere no banco
                 self.__database.execute_query(insert_user_query, user_params)
-            self.createaccount(user["cpf"])
 
-            return usuario
+                # Cria conta associada ao usuário
+                self.createAccount(user["cpf"])
+                return usuario
+            else:
+                print("Erro: Dados do usuário estão incompletos.")
+        except Exception as e:
+            print(f"Erro ao criar usuário: {e}")
 
-    def createaccount(self,cpf:str):
+
+    def createAccount(self,cpf:str):
         condition = True
         user = self.users[cpf]
         while condition:
@@ -84,7 +92,7 @@ class Bank():
         try:
             if isinstance(new_account, Conta):
                 insert_account_query = """
-                INSERT INTO accounts (numero_conta, agencia, saldo, cpf) 
+                INSERT INTO Accounts (numero_conta, agencia, saldo, cpf) 
                 VALUES (?, ?, ?, ?)
                 """
 
@@ -128,7 +136,7 @@ class Bank():
         user = self.users[f"{cpf}"]
         try:
             if len(user.contas) == 0:
-                query = "SELECT numero_conta, agencia, saldo FROM accounts WHERE cpf = ?"
+                query = "SELECT numero_conta, agencia, saldo FROM Accounts WHERE cpf = ?"
                 listaContas = self.__database.execute_query(query=query, params=(str(cpf), ))
 
                 for conta in listaContas:
@@ -173,7 +181,7 @@ class Bank():
     def __thread_init_bank_user(self,):
         with self.lock:
             try:
-                listaUsers = self.__database.execute_query("SELECT * FROM User")
+                listaUsers = self.__database.execute_query("SELECT * FROM Users")
                 for user in listaUsers:
                     cpf = str(user[0])
                     self.users[cpf] = User(user[0], user[4], user[1], user[3], user[2], user[5])

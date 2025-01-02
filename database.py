@@ -4,11 +4,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 class AccountsDB:
-    def __init__(self, database='banks.db'):
+    def __init__(self, database='./db/banks.db'):
         self.database = database
         self.connection = sqlite3.connect(self.database, check_same_thread=False)
         self.cursor = self.connection.cursor()
-        self.initialize_database()
 
     def connect(self):
         if self.__connection is None:
@@ -38,33 +37,3 @@ class AccountsDB:
                 return None
 
 
-    def initialize_database(self):
-        try:
-            self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                cpf TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                password TEXT NOT NULL
-            )
-            ''')
-            self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS accounts (
-                account_number INTEGER PRIMARY KEY AUTOINCREMENT,
-                cpf TEXT NOT NULL,
-                balance REAL DEFAULT 0.0,
-                FOREIGN KEY (cpf) REFERENCES users(cpf)
-            )
-            ''')
-            self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                account_number INTEGER NOT NULL,
-                amount REAL NOT NULL,
-                type TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (account_number) REFERENCES accounts(account_number)
-            )
-            ''')
-            self.connection.commit()
-        except Exception as e:
-            print(f"Erro ao inicializar banco de dados: {e}")
